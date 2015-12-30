@@ -3,6 +3,10 @@
 #include <wheel.h>
 #include <wheel_atlas.h>
 
+#include <wheel_extras_font.h>
+
+#include "include/defaultshaders.h"
+
 // Begin OpenAL stuff
 // Adds dependency to OpenAL
 #include <AL/al.h>
@@ -23,6 +27,8 @@
 #endif
 
 #include <glm/glm.hpp>
+
+#define YAM_CLEAR_FLAGS 0x00000000
 
 #define YAM_ERROR       0x01
 
@@ -146,6 +152,8 @@ namespace yam
 
    BaseEngine::BaseEngine()
    {
+      int_flags = YAM_CLEAR_FLAGS;
+
       if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER | SDL_INIT_JOYSTICK | SDL_INIT_HAPTIC))
       {
          std::cout << "Couldn't init SDL: " << SDL_GetError() << "\n";
@@ -305,7 +313,8 @@ namespace yam
       size_t rsize = rbuffer.current.size();
 
       glBindBuffer(GL_ARRAY_BUFFER, rbuffer.cvbo);
-      glBufferData(GL_ARRAY_BUFFER, rsize, &rbuffer.current[0], GL_DYNAMIC_DRAW);
+      glBufferData(GL_ARRAY_BUFFER, rsize,
+                   &rbuffer.current[0], GL_DYNAMIC_DRAW);
 
       glEnableVertexAttribArray(0);
       glEnableVertexAttribArray(1);
@@ -433,7 +442,7 @@ int main(int argc, char* argv[])
 
    if (!game->ok())
    {
-      std::cout << "error\n";
+      std::cout << "error in initialisation\n";
       delete game;
 
       return 1;
