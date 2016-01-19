@@ -1,153 +1,124 @@
-// clang++ `sdl2-config --cflags` -I./deps/wheel/include --std=c++11 game.cpp
-
-#include <wheel.h>
-#include <wheel_atlas.h>
-
-#include <wheel_extras_font.h>
-
 #include "include/defaultshaders.h"
+#include "include/baseengine.h"
+#include "include/console.h"
 
-// Begin OpenAL stuff
-// Adds dependency to OpenAL
-#include <AL/al.h>
-// End OpenAL stuff
-
-// Begin OpenGL stuff
-// Adds dependencies to OpenGL, GLEW, GLM
-
-// Adds dependency to SDL
-#include <SDL.h>
-
-#ifdef __APPLE__
-   #include <OpenGL/glew.h>
-   #include <OpenGL/gl.h>
-#else
-   #include <GL/glew.h>
-   #include <GL/gl.h>
-#endif
-
-#include <glm/glm.hpp>
-
-#define YAM_CLEAR_FLAGS 0x00000000
-
-#define YAM_ERROR       0x01
-
-#define YAM_VBUF_SIZE   1024
+#include "include/argparser.hpp"
 
 namespace yam
 {
-   struct atlas_t
-   {
-      wheel::Atlas      atlas;
-      wheel::string     texture;
-
-      std::unordered_map<wcl::string, wheel::rect_t> stored;
-   };
-
-   struct texture_t
-   {
-      uint32_t          id;
-
-      uint32_t          w;
-      uint32_t          h;
-      uint32_t          channels;
-      uint32_t          format;
-   };
-
-   struct surface_t
-   {
-      uint32_t id;
-      std::vector<texture_t> attachment;
-   };
-
-   struct vertex_cache_t
-   {
-      std::set<wcl::string>      stored;
-      std::vector<wcl::buffer_t> buffer;
-   };
-
-   struct renderbuffer_t
-   {
-      vertex_cache_t    cache;
-      wheel::buffer_t   current;
-      GLuint            cvbo;
-
-      renderbuffer_t() : cvbo(0) {}
-   };
-
-   class BaseEngine
-   {
-      private:
-         SDL_Window*    window;
-         GLuint         cvbo;
-
-         uint32_t       int_flags;
-         bool           window_alive;
-         uint32_t       width, height;
-
-         void*          context;
-
-      protected:
-         // Renderer stuff
-         bool           shader_active;
-         uint32_t       scrw, scrh;
-
-         uint32_t       fbo_main, fbo_texture;
-
-         renderbuffer_t rbuffer;
-
-         std::unordered_map<wcl::string, int32_t> shaderlist;
-         std::unordered_map<wcl::string, atlas_t> atlas;
-         std::unordered_map<wcl::string, texture_t> texture;
-         std::unordered_map<wcl::string, surface_t> surface;
-
-         // Controller list
-         std::list<void*> controllers;
-         std::unordered_map<uint16_t, bool> keys_down;
-
-         // Internal atlasing
-         std::vector<atlas_t> atlases;
-
-         // Map from sprite name to atlas entry
-  //FIXME:       std::unordered_map<wcl::string, atlas_entry_t> sprites;
-
-         // Map from texture name to texture struct
-         std::unordered_map<wcl::string, texture_t> textures;
-
-         uint32_t       get_txc(const wcl::string& bname, wheel::rect_t& result);
-         uint32_t       atlas_buffer(const wcl::string& bname, uint32_t w, uint32_t h, void* data);
-
-      public:
-
-         // Rendering stuff
-         void           AddVertex(wheel::vertex_t vert, wheel::buffer_t* buf = nullptr);
-         void           Flush(int32_t array_type = GL_TRIANGLES);
-
-         // Controller stuff
-         wheel::string  GetControllerTypeString(void* controller);
-
-         // Window stuff
-         uint32_t       OpenWindow(const wcl::string& title, uint32_t width, uint32_t height);
-         void           SwapBuffers();
-
-         uint32_t       GetEvents(wheel::EventList* events);
-
-         bool           WindowIsOpen();
-
-         uint32_t       DrawSprite(const wcl::string& sprite,
-                                   uint32_t x, uint32_t y, uint32_t w = ~0, uint32_t h = ~0,
-                                   int32_t pivot_x = 0, int32_t pivot_y = 0, float angle = .0f);
-
-         bool           ok();
-
-         BaseEngine();
-        ~BaseEngine();
-   };
-
-   // End OpenGL stuff
    bool BaseEngine::ok()
    {
       return !(int_flags && YAM_ERROR);
+   }
+
+   void BaseEngine::Error(errlevel_t level, const wcl::string& msg)
+   {
+   }
+
+   uint32_t BaseEngine::AddShader(const wcl::string& name,
+                                  const wcl::string& vert,
+                                  const wcl::string& frag)
+   {
+      const wheel::buffer_t* raw_vs = wheel::GetBuffer(vert);
+      const wheel::buffer_t* raw_fs = wheel::GetBuffer(frag);
+
+      if (raw_fs == nullptr || raw_vs == nullptr)
+      {
+         if (raw_fs != nullptr)
+            Error(ERROR, wheel::strfmt(
+               "BaseEngine::AddShader(): File unavailable: %s", vert.std_str().c_str()
+            ));
+         else if (raw_vs != nullptr)
+            Error(ERROR, wheel::strfmt(
+               "BaseEngine::AddShader(): File unavailable: %s", frag.std_str().c_str()
+            ));
+         else
+            Error(ERROR, wheel::strfmt(
+               "BaseEngine::AddShader(): Shader files unavailable: %s, %s",
+               frag.std_str().c_str(),
+               vert.std_str().c_str()
+            ));
+
+         return WHEEL_RESOURCE_UNAVAILABLE;
+      }
+
+      ((wheel::buffer_t)(*raw_vs)).push_back('\0');
+      ((wheel::buffer_t)(*raw_fs)).push_back('\0');
+
+      return AddShader(name, (const char*) &((*raw_vs)[0]), (const char*) &((*raw_fs)[0]));
+   }
+
+
+   uint32_t BaseEngine::AddShader(const wcl::string& name,
+                                  const char* vert,
+                                  const char* frag)
+   {
+      int vertexshader, fragmentshader, program;
+      int vertexcompiled, fragmentcompiled, linked;
+
+      vertexshader = glCreateShader(GL_VERTEX_SHADER);
+      glShaderSource(vertexshader, 1, (const GLchar**) &vert, 0);
+      glCompileShader(vertexshader);
+      glGetShaderiv(vertexshader, GL_COMPILE_STATUS, &vertexcompiled);
+
+      if (!vertexcompiled)
+      {
+         Error(ERROR, wheel::strfmt(
+            "BaseEngine::AddShader(): Vertex shader '%s' compile error",
+            name.std_str().c_str()
+         ));
+
+         return YAM_SHADER_COMPILE_ERROR;
+      }
+
+      fragmentshader = glCreateShader(GL_FRAGMENT_SHADER);
+      glShaderSource(fragmentshader, 1, (const GLchar**) &frag, 0);
+      glCompileShader(fragmentshader);
+      glGetShaderiv(fragmentshader, GL_COMPILE_STATUS, &fragmentcompiled);
+
+      if (!fragmentcompiled)
+      {
+         Error(ERROR, wheel::strfmt(
+            "BaseEngine::AddShader(): Fragment shader '%s' compile error",
+            name.std_str().c_str()
+         ));
+      }
+
+      program = glCreateProgram();
+      glAttachShader(program, vertexshader);
+      glAttachShader(program, fragmentshader);
+      glLinkProgram(program);
+      glGetProgramiv(program, GL_LINK_STATUS, (int*)&linked);
+
+      if (!linked)
+      {
+         Error(ERROR, wheel::strfmt(
+            "BaseEngine::AddShader(): Shader '%s' link error",
+            name.std_str().c_str()
+         ));
+      }
+
+      shaderlist[name] = program;
+
+      return WHEEL_OK;
+   }
+
+   uint32_t BaseEngine::UseShader(const wcl::string& name)
+   {
+      if (shaderlist.count(name) == 1)
+      {
+         glUseProgram(shaderlist[name]);
+         current_shader = name;
+
+         return WHEEL_OK;
+      }
+
+      Error(ERROR, wheel::strfmt(
+         "BaseEngine::UseShader(): Tried to use invalid shader '%s'",
+         name.std_str().c_str()
+      ));
+
+      return WHEEL_RESOURCE_UNAVAILABLE;
    }
 
    BaseEngine::BaseEngine()
@@ -322,9 +293,18 @@ namespace yam
 
       glBindBuffer(GL_ARRAY_BUFFER, rbuffer.cvbo);
 
-      glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(wheel::vertex_t), (void*)0);
-      glVertexAttribPointer(1, 2, GL_UNSIGNED_SHORT, GL_TRUE, sizeof(wheel::vertex_t), (void*)(2*sizeof(float)));
-      glVertexAttribPointer(2, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(wheel::vertex_t), (void*)(4*sizeof(float)));
+      glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE,
+                            sizeof(wheel::vertex_t),
+                            (void*)0
+                           );
+      glVertexAttribPointer(1, 2, GL_UNSIGNED_SHORT, GL_TRUE,
+                            sizeof(wheel::vertex_t),
+                            (void*)(2*sizeof(float))
+                           );
+      glVertexAttribPointer(2, 4, GL_UNSIGNED_BYTE, GL_TRUE,
+                            sizeof(wheel::vertex_t),
+                            (void*)(4*sizeof(float))
+                           );
 
       glDrawArrays(array_type, 0, rsize / sizeof(wheel::vertex_t));
 
@@ -436,7 +416,48 @@ namespace yam
 
 int main(int argc, char* argv[])
 {
+   uint32_t cerr = wcl::initialise(argc, argv);
+
+   wcl::LuaState state;
+
+   //state.Load("test.lua");
+   //
+   state("function subhello(a, b)\n return a - b, \"hello\"\n end");
+
+   int d;
+   wcl::string g;
+
+   std::tie(d, g) = state.Call<int, std::string>("subhello", 1 , 3);
+
+   std::cout << d << ", " << g << "\n";
+
+   state("x = 8");
+
+   int x;
+   lua_getglobal(state.ptr(), "x");
+   x = lua_tointeger(state.ptr(), -1);
+   lua_pop(state.ptr(), 1);
+
+   std::cout << x << "\n";
+
+   state("print(type(eep))");
+
+   const std::string greeting = "hello";
+   std::function<std::string(void)>> fun = [greeting]() {
+      return greeting;
+   }
+   state.Register("greet", fun);
+   assert("greet" == state.Call<std::string>("greet"));
+
+
+   if (cerr)
+   {
+      std::cout << "wheel initialisation error -- fatal, exiting...\n";
+      return 255;
+   }
+
    yam::BaseEngine* game = new yam::BaseEngine();
+   yam::Console* console = new yam::Console(game);
 
    wheel::EventList ev;
 
@@ -450,12 +471,19 @@ int main(int argc, char* argv[])
       std::cout << "Engine init successful\n";
    }
 
+   if (console->RunScript("autoexec.scr"))
+   {
+      std::cout << "error in running init script\n";
+   }
+
    while(game->WindowIsOpen())
    {
       game->GetEvents(&ev);
       game->SwapBuffers();
    }
 
+   delete console;
    delete game;
+
    return 0;
 }

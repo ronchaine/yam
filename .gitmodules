@@ -4,3 +4,6 @@
 [submodule "deps/wheel"]
 	path = deps/wheel
 	url = https://github.com/ronchaine/wheel.git
+[submodule "deps/Selene"]
+	path = deps/Selene
+	url = https://github.com/jeremyong/Selene
