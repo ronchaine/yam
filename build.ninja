@@ -1,0 +1,36 @@
+#build.ninja
+
+builddir = obj
+cflags = -std=c++14 -Ideps/wheel-extras/include $
+         -Ideps/wheel/include $
+         -g -pthread -fno-rtti -fno-exceptions $
+         `freetype-config --cflags` $
+         `sdl2-config --cflags` $
+         -fdiagnostics-color=always
+cxx_compiler = clang++
+libs = -Lbuild/src `sdl2-config --libs` $
+       `freetype-config --libs` $
+       -lwheel_static -lGLEW -lGL -lphysfs
+
+rule compile
+   command = $cxx_compiler -MMD -MT $out -MF $out.d $cflags -c $in -o $out
+   description = Building file $in
+   depfile = $out.d
+   deps = gcc
+
+rule link
+   command = $cxx_compiler $in -o $out $libs
+
+build $builddir/font.o:                      compile font.cpp
+build $builddir/game.o:                      compile game.cpp
+build $builddir/console.o:                   compile console.cpp
+#build $builddir/baseengine_render.o:         compile baseengine_render.cpp
+build $builddir/shader.o:                    compile shader.cpp
+build $builddir/renderer.o:                  compile renderer.cpp
+
+build yam:                                   link $builddir/font.o $
+                                                  $builddir/game.o $
+                                                  $builddir/console.o $
+                                                  $builddir/shader.o $
+                                                  $builddir/renderer.o 
+default yam

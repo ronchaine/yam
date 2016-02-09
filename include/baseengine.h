@@ -2,20 +2,32 @@
 #define YAM_BASEENGINE_H
 
 #include "common.h"
+#include "shader.h"
+#include "renderer.h"
 
 namespace yam
 {
    class BaseEngine
    {
       private:
-         SDL_Window*    window;
-         GLuint         cvbo;
+         uint32_t          int_flags;
+         uint32_t          width, height;
 
-         uint32_t       int_flags;
-         bool           window_alive;
-         uint32_t       width, height;
+         void*             context;
 
-         void*          context;
+         uint64_t          frame;
+
+         // Timing, synch
+
+         timepoint_t t_current;
+         timepoint_t t_previous;
+
+         double t_elapsed;
+         double t_delay;
+
+         static constexpr double update_interval = 1000.0 / 60.0;
+
+         bool   t_active;
 
       protected:
          // Renderer stuff
@@ -26,12 +38,8 @@ namespace yam
 
          renderbuffer_t rbuffer;
 
-         wcl::string    current_shader;
-
-         std::unordered_map<wcl::string, int32_t> shaderlist;
-         std::unordered_map<wcl::string, atlas_t> atlas;
-         std::unordered_map<wcl::string, texture_t> texture;
-         std::unordered_map<wcl::string, surface_t> surface;
+         // Event list
+         wheel::EventList events;
 
          // Controller list
          std::list<void*> controllers;
@@ -46,48 +54,47 @@ namespace yam
          // Map from texture name to texture struct
          std::unordered_map<wcl::string, texture_t> textures;
 
-         uint32_t       get_txc(const wcl::string& bname, wheel::rect_t& result);
-         uint32_t       atlas_buffer(const wcl::string& bname, uint32_t w, uint32_t h, void* data);
+         uint32_t          get_txc(const wcl::string& bname, wheel::rect_t& result);
+         uint32_t          atlas_buffer(const wcl::string& bname,
+                                        uint32_t w, uint32_t h,
+                                        void* data);
 
       public:
 
-         // Rendering stuff
-         void           AddVertex(wheel::vertex_t vert, wheel::buffer_t* buf = nullptr);
-         void           Flush(int32_t array_type = GL_TRIANGLES);
+         // Strange stuff
+         const uint64_t*   get_frameptr() { return &frame; }
 
-         // Shader stuff
-         uint32_t       AddShader(const wcl::string& name,
-                                  const wcl::string& vert,
-                                  const wcl::string& frag);
+         // Rendering stuff FIXME: move to renderer
+         void              AddVertex(wheel::vertex_t vert, wheel::buffer_t* buf = nullptr);
+         void              Flush(int32_t array_type = GL_TRIANGLES);
+         void              Render();
 
-         uint32_t       AddShader(const wcl::string& name,
-                                  const char* vert,
-                                  const char* frag);
-
-         uint32_t       UseShader(const wcl::string& name);
-
-         inline int32_t get_program() { return shaderlist[current_shader]; }
+         // Shader stuff FIXME: move to renderer
+         uint32_t          AddShader(const wcl::string& name, Shader&& shader);
+         uint32_t          UseShader(const wcl::string& name);
 
          // Controller stuff
-         wheel::string  GetControllerTypeString(void* controller);
+         wheel::string     GetControllerTypeString(void* controller);
 
          // Window stuff
-         uint32_t       OpenWindow(const wcl::string& title, uint32_t width, uint32_t height);
-         void           SwapBuffers();
+         uint32_t          OpenWindow(const wcl::string& title, uint32_t width, uint32_t height);
+         void              SwapBuffers();
 
-         uint32_t       GetEvents(wheel::EventList* events);
+         uint32_t          GetEvents(wheel::EventList* events);
 
-         bool           WindowIsOpen();
+         bool              WindowIsOpen();
 
-         uint32_t       DrawSprite(const wcl::string& sprite,
-                                   uint32_t x, uint32_t y, uint32_t w = ~0, uint32_t h = ~0,
-                                   int32_t pivot_x = 0, int32_t pivot_y = 0, float angle = .0f);
+         uint32_t          DrawSprite(const wcl::string& sprite,
+                                      uint32_t x, uint32_t y, uint32_t w = ~0, uint32_t h = ~0,
+                                      int32_t pivot_x = 0, int32_t pivot_y = 0, float angle = .0f);
 
-         // Debug & Error handling
-         void           Error(errlevel_t level, const wcl::string& msg);
+         bool              ok();
 
+         // Main game loop
+         bool              Run();
 
-         bool           ok();
+         // Update everything
+         void              Update() {}
 
          BaseEngine();
         ~BaseEngine();

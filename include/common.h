@@ -5,7 +5,11 @@
 #include <wheel_atlas.h>
 #include <wheel_extras_font.h>
 
-#include "lua.hpp"
+#include "debug.hpp"
+
+#include <chrono>
+
+//#include "lua.hpp"
 
 // Begin OpenAL stuff
 // Adds dependency to OpenAL
@@ -53,13 +57,7 @@ namespace wheel
 
 namespace yam
 {
-   enum errlevel_t
-   {
-      DEBUG    = 0,
-      WARNING,
-      ERROR,
-      FATAL
-   };
+   typedef std::chrono::steady_clock::time_point timepoint_t;
 
    struct atlas_t
    {
@@ -85,15 +83,8 @@ namespace yam
       std::vector<texture_t> attachment;
    };
 
-   struct vertex_cache_t
-   {
-      std::set<wcl::string>      stored;
-      std::vector<wcl::buffer_t> buffer;
-   };
-
    struct renderbuffer_t
    {
-      vertex_cache_t    cache;
       wheel::buffer_t   current;
       GLuint            cvbo;
 
