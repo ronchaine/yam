@@ -27,10 +27,12 @@ build $builddir/console.o:                   compile console.cpp
 #build $builddir/baseengine_render.o:         compile baseengine_render.cpp
 build $builddir/shader.o:                    compile shader.cpp
 build $builddir/renderer.o:                  compile renderer.cpp
+build $builddir/util.o:                      compile util.cpp
 
 build yam:                                   link $builddir/font.o $
                                                   $builddir/game.o $
                                                   $builddir/console.o $
                                                   $builddir/shader.o $
-                                                  $builddir/renderer.o 
+                                                  $builddir/renderer.o $
+                                                  $builddir/util.o
 default yam
