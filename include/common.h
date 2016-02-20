@@ -58,7 +58,7 @@ namespace wheel
 namespace yam
 {
    typedef std::chrono::steady_clock::time_point timepoint_t;
-
+/*
    struct atlas_t
    {
       wheel::Atlas      atlas;
@@ -66,31 +66,7 @@ namespace yam
 
       std::unordered_map<wcl::string, wheel::rect_t> stored;
    };
-
-   struct texture_t
-   {
-      uint32_t          id;
-
-      uint32_t          w;
-      uint32_t          h;
-      uint32_t          channels;
-      uint32_t          format;
-   };
-
-   struct surface_t
-   {
-      uint32_t id;
-      std::vector<texture_t> attachment;
-   };
-
-   struct renderbuffer_t
-   {
-      wheel::buffer_t   current;
-      GLuint            cvbo;
-
-      renderbuffer_t() : cvbo(0) {}
-   };
-
+*/
 }
 
 #endif

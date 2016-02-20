@@ -13,8 +13,6 @@ namespace yam
          uint32_t          int_flags;
          uint32_t          width, height;
 
-         void*             context;
-
          uint64_t          frame;
 
          // Timing, synch
@@ -30,14 +28,6 @@ namespace yam
          bool   t_active;
 
       protected:
-         // Renderer stuff
-         bool           shader_active;
-         uint32_t       scrw, scrh;
-
-         uint32_t       fbo_main, fbo_texture;
-
-         renderbuffer_t rbuffer;
-
          // Event list
          wheel::EventList events;
 
@@ -64,20 +54,17 @@ namespace yam
          // Strange stuff
          const uint64_t*   get_frameptr() { return &frame; }
 
-         // Rendering stuff FIXME: move to renderer
+/*
+
          void              AddVertex(wheel::vertex_t vert, wheel::buffer_t* buf = nullptr);
          void              Flush(int32_t array_type = GL_TRIANGLES);
+*/
          void              Render();
-
-         // Shader stuff FIXME: move to renderer
-         uint32_t          AddShader(const wcl::string& name, Shader&& shader);
-         uint32_t          UseShader(const wcl::string& name);
 
          // Controller stuff
          wheel::string     GetControllerTypeString(void* controller);
 
          // Window stuff
-         uint32_t          OpenWindow(const wcl::string& title, uint32_t width, uint32_t height);
          void              SwapBuffers();
 
          uint32_t          GetEvents(wheel::EventList* events);
@@ -94,7 +81,7 @@ namespace yam
          bool              Run();
 
          // Update everything
-         void              Update() {}
+         void              Update();
 
          BaseEngine();
         ~BaseEngine();

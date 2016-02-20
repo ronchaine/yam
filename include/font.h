@@ -6,7 +6,8 @@
 
 #include <wheel.h>
 
-#include "renderer.h"
+#define YAM_FONTBUFFER_NAME "__yam_font_buffer"
+#define YAM_FONTBUFFER_SIZE 1024
 
 namespace yam
 {
@@ -27,6 +28,8 @@ namespace yam
          wheel::buffer_t      fdata;
 
       public:
+         const FT_Face& get_face() const { return face; }
+
          Font(const wcl::string& file, uint32_t size);
         ~Font();
    };
