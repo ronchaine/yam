@@ -6,6 +6,15 @@ namespace yam
 {
    namespace draw
    {
+      static double cursor_pos = 0;
+      static double cursor_row = 0;
+
+      void set_cursor(uint32_t x, uint32_t y)
+      {
+         cursor_pos = x;
+         cursor_row = y;
+      }
+
       void rectangle(uint32_t layer, uint32_t x, uint32_t y,
                      uint32_t w, uint32_t h, uint32_t c,
                      const wcl::string& sprite, float scale)
@@ -110,9 +119,8 @@ namespace yam
       }
 
       void text(uint32_t layer,
-                uint32_t x, uint32_t y,
-                const wcl::string& text,
                 const Font& font,
+                const wcl::string& text,
                 uint32_t colour)
       {
          wcl::string old_shader = renderer.GetShader();
@@ -121,8 +129,7 @@ namespace yam
 
          wheel::rect_t r;
 
-         double cursor_pos = x;
-         double cursor_row = y;
+         double cursor_newline_pos = cursor_pos;
 
          const double x_unit = 2.0f / (float)renderer.scrw;
          const double y_unit = 2.0f / (float)renderer.scrh;
@@ -140,13 +147,13 @@ namespace yam
          {
             c = *(text.getptr() + i);
 
-            if (FT_Load_Char(face, c, FT_LOAD_RENDER))
+            if (FT_Load_Char(face, c, FT_LOAD_RENDER | FT_LOAD_FORCE_AUTOHINT | FT_LOAD_TARGET_LIGHT))
                continue;
 
             if (c == '\n')
             {
-               cursor_pos = x;
-               cursor_row -= face->glyph->bitmap.rows * 1.4f;
+               cursor_pos = cursor_newline_pos;
+               cursor_row -= face->glyph->bitmap.rows * 3.0f;
                continue;
             }
 

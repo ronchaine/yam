@@ -48,7 +48,7 @@ namespace yam
       uint32_t ft_w, ft_h;
       for (char32_t c : precache)
       {
-         if (FT_Load_Char(face, c, FT_LOAD_RENDER))
+         if (FT_Load_Char(face, c, FT_LOAD_RENDER | FT_LOAD_FORCE_AUTOHINT | FT_LOAD_TARGET_LIGHT))
             continue;
 
          ft_w = face->glyph->bitmap.width;
