@@ -9,6 +9,7 @@ uniform sampler2D guiatlas;
 void main()
 {
    vec4 alpha = texture2D(guiatlas, texcoord0);
+
    vec4 out_colour = vec4(ex_col.r,
                           ex_col.g,
                           ex_col.b,
