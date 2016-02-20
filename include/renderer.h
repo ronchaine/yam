@@ -34,15 +34,8 @@ namespace yam
 
       bool operator<(const rord_t& value) const
       {
-         if (-z_order < -value.z_order)
-            return true;
-         if (shader < value.shader)
-            return true;
-
-         if (array_type > value.array_type)
-            return true;
-
-         return false;
+         return std::tie(value.z_order, shader, value.array_type)
+              < std::tie(z_order, value.shader, array_type);
       }
 
       bool operator==(const rord_t& other) const

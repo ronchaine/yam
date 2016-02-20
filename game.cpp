@@ -10,7 +10,7 @@ namespace yam
 {
    OutputTarget log;
 
-   Font* arial16;
+   Font* monospace;
 
    bool BaseEngine::ok()
    {
@@ -63,68 +63,7 @@ namespace yam
    {
       return renderer.Alive();
    }
-/*
-   void BaseEngine::AddVertex(wheel::vertex_t vert, wheel::buffer_t* buf)
-   {
-      if (buf == nullptr)
-         buf = &(rbuffer.current);
 
-      if (buf->pos() > buf->capacity() - 24)
-         Flush();
-
-      buf->write<float>(vert.x0);
-      buf->write<float>(vert.y0);
-
-      buf->write<uint16_t>(vert.s0);
-      buf->write<uint16_t>(vert.t0);
-
-      buf->write<uint8_t>(vert.r);
-      buf->write<uint8_t>(vert.g);
-      buf->write<uint8_t>(vert.b);
-      buf->write<uint8_t>(vert.a);
-
-      return;
-   }
-
-   void BaseEngine::Flush(int32_t array_type)
-   {
-      size_t rsize = rbuffer.current.size();
-
-      glBindBuffer(GL_ARRAY_BUFFER, rbuffer.cvbo);
-      glBufferData(GL_ARRAY_BUFFER, rsize,
-                   &rbuffer.current[0], GL_DYNAMIC_DRAW);
-
-      glEnableVertexAttribArray(0);
-      glEnableVertexAttribArray(1);
-      glEnableVertexAttribArray(2);
-
-      glBindBuffer(GL_ARRAY_BUFFER, rbuffer.cvbo);
-
-      glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE,
-                            sizeof(wheel::vertex_t),
-                            (void*)0
-                           );
-      glVertexAttribPointer(1, 2, GL_UNSIGNED_SHORT, GL_TRUE,
-                            sizeof(wheel::vertex_t),
-                            (void*)(2*sizeof(float))
-                           );
-      glVertexAttribPointer(2, 4, GL_UNSIGNED_BYTE, GL_TRUE,
-                            sizeof(wheel::vertex_t),
-                            (void*)(4*sizeof(float))
-                           );
-
-      glDrawArrays(array_type, 0, rsize / sizeof(wheel::vertex_t));
-
-      glDisableVertexAttribArray(0);
-      glDisableVertexAttribArray(1);
-      glDisableVertexAttribArray(2);
-
-      rbuffer.current.clear();
-      rbuffer.current.seek(0);
-
-      return;
-   }
-*/
    void BaseEngine::SwapBuffers()
    {
       renderer.Swap();
@@ -270,7 +209,8 @@ void yam::BaseEngine::Render()
 
    draw::line(0, 50, 50, 600, 80, 0xffffffff);
 
-   draw::text(0, 50, 200, "This is text", *arial16, 0xffffffff);
+   draw::set_cursor(10, 200);
+   draw::text(0, *monospace, "This is text", 0xffffffff);
 
    yam::renderer.Flush();
    renderer.Swap();
@@ -297,7 +237,7 @@ int main(int argc, char* argv[])
    yam::renderer.AddShader("builtin_text", yam::Shader("shaders/gui.vs", "shaders/gui.fs"));
    yam::renderer.shader["builtin_text"].AddBinding(YAM_FONTBUFFER_NAME, "guiatlas");
 
-   yam::arial16 = new yam::Font("LiberationMono-Regular.ttf", 15);
+   yam::monospace = new yam::Font("Cousine-Regular.ttf", 15);
 
    if (!game->ok())
    {
@@ -323,7 +263,7 @@ int main(int argc, char* argv[])
 
    game->Run();
 
-   delete yam::arial16;
+   delete yam::monospace;
 
    delete console;
    delete game;

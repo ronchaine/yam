@@ -28,9 +28,12 @@ namespace yam
                 uint32_t c = 0xffffffff
                );
 
-      void text(uint32_t layer, uint32_t x, uint32_t y,
-                const wcl::string& text, const Font& font,
-                uint32_t c = 0xffffffff);
+      void set_cursor(uint32_t x, uint32_t y);
+
+      void text(uint32_t layer,
+                const Font& font,
+                const wcl::string& text,
+                uint32_t colour = 0xffffffff);
    }
 }
 
