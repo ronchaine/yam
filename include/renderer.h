@@ -94,14 +94,6 @@ namespace yam {
       }
    };
 
-   struct texture_t
-   {
-      uint32_t    id;
-      uint32_t    w,h;
-      uint32_t    channels;
-      uint32_t    format;
-   };
-
    struct atlas_t
    {
       wheel::Atlas      atlas;

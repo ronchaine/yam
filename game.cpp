@@ -1,6 +1,8 @@
 #include "include/defaultshaders.h"
 #include "include/baseengine.h"
 #include "include/console.h"
+#include "include/image.h"
+#include "include/image/png.hpp"
 
 #include "include/argparser.hpp"
 
@@ -19,6 +21,7 @@ namespace yam
 
    BaseEngine::BaseEngine()
    {
+      t_active = false;
       int_flags = YAM_CLEAR_FLAGS;
 
       if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER | SDL_INIT_JOYSTICK | SDL_INIT_HAPTIC))
@@ -202,14 +205,14 @@ void yam::BaseEngine::Render()
 
    renderer.SetShader("testi");
 
-   draw::rectangle(0, 20, 20, 40, 40, 0xff0f30ef);
-   draw::rectangle(0, 40, 40, 40, 40, 0xff0f30ef);
+   draw::rectangle(4, 20, 20, 40, 40, 0xff0f30ef);
+   draw::rectangle(3, 40, 40, 40, 40, 0xff0f30ef);
 
-   draw::triangle(0, 100, 20, 120, 20, 60, 50, 0xffffffff);
+   draw::triangle(2, 100, 20, 120, 20, 60, 50, 0xff00ffff);
 
-   draw::line(0, 50, 50, 600, 80, 0xffffffff);
+   draw::line(10, 50, 50, 600, 80, 0xffffffff);
 
-   draw::set_cursor(10, 200);
+   draw::set_cursor(10, 100);
    draw::text(0, *monospace, "This is text", 0xffffffff);
 
    yam::renderer.Flush();
@@ -237,7 +240,7 @@ int main(int argc, char* argv[])
    yam::renderer.AddShader("builtin_text", yam::Shader("shaders/gui.vs", "shaders/gui.fs"));
    yam::renderer.shader["builtin_text"].AddBinding(YAM_FONTBUFFER_NAME, "guiatlas");
 
-   yam::monospace = new yam::Font("Cousine-Regular.ttf", 15);
+   yam::monospace = new yam::Font("Cousine-Regular.ttf", 11);
 
    if (!game->ok())
    {
@@ -260,6 +263,9 @@ int main(int argc, char* argv[])
    yam::renderer.texture_unit[0] = "test texture";
 
    std::cout << "texture unit 0 bound to " << yam::renderer.texture_unit[0].current() << "\n";
+
+   wcl::buffer_t* png = wcl::GetBuffer("content/test_diffuse.png");
+   yam::read_png(*png);
 
    game->Run();
 

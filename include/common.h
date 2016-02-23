@@ -58,15 +58,24 @@ namespace wheel
 namespace yam
 {
    typedef std::chrono::steady_clock::time_point timepoint_t;
-/*
-   struct atlas_t
-   {
-      wheel::Atlas      atlas;
-      wheel::string     texture;
+   typedef uint32_t img_format_t;
 
-      std::unordered_map<wcl::string, wheel::rect_t> stored;
+   struct texture_t
+   {
+      uint32_t    id;
+      uint32_t    w,h;
+      uint32_t    channels;
+      uint32_t    format;
    };
-*/
+
+   struct image_t
+   {
+      uint32_t       width;
+      uint32_t       height;
+      uint32_t       channels;
+
+      wcl::buffer_t  image;
+   };
 }
 
 #endif

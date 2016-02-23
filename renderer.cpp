@@ -95,6 +95,9 @@ namespace yam
    void Renderer::Destroy()
    {
       alive = false;
+
+      if (context != nullptr)
+         SDL_GL_DeleteContext(context);
    }
 
    Renderer::~Renderer()

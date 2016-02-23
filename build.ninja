@@ -8,6 +8,8 @@ cflags = -std=c++14 -Ideps/wheel-extras/include $
          `sdl2-config --cflags` $
          -fdiagnostics-color=always
 cxx_compiler = clang++
+c_compiler = clang
+
 libs = -Lbuild/src `sdl2-config --libs` $
        `freetype-config --libs` $
        -lwheel_static -lGLEW -lGL -lphysfs
@@ -17,6 +19,10 @@ rule compile
    description = Building file $in
    depfile = $out.d
    deps = gcc
+
+rule compilec
+   command = $c_compiler -c $in -o $out
+   description = Building file $in
 
 rule link
    command = $cxx_compiler $in -o $out $libs
@@ -28,11 +34,15 @@ build $builddir/console.o:                   compile console.cpp
 build $builddir/shader.o:                    compile shader.cpp
 build $builddir/renderer.o:                  compile renderer.cpp
 build $builddir/util.o:                      compile util.cpp
+#build $builddir/miniz.o:                     compilec deps/miniz.c
+build $builddir/image.o:                     compile image.cpp
 
 build yam:                                   link $builddir/font.o $
                                                   $builddir/game.o $
                                                   $builddir/console.o $
                                                   $builddir/shader.o $
                                                   $builddir/renderer.o $
-                                                  $builddir/util.o
+                                                  $builddir/util.o $
+                                                  $builddir/image.o
+
 default yam

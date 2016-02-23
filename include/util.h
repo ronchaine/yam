@@ -29,6 +29,7 @@ namespace yam
                );
 
       void set_cursor(uint32_t x, uint32_t y);
+      std::tuple<double, double> get_cursor();
 
       void text(uint32_t layer,
                 const Font& font,

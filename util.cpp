@@ -15,6 +15,11 @@ namespace yam
          cursor_row = y;
       }
 
+      std::tuple<double, double> get_cursor()
+      {
+         return std::tie(cursor_pos, cursor_row);
+      }
+
       void rectangle(uint32_t layer, uint32_t x, uint32_t y,
                      uint32_t w, uint32_t h, uint32_t c,
                      const wcl::string& sprite, float scale)

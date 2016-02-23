@@ -6,13 +6,14 @@
 
 namespace yam
 {
-   constexpr static uint32_t FATAL     = 12;
-   constexpr static uint32_t ERROR     = 10;
-   constexpr static uint32_t WARNING   = 7;
-   constexpr static uint32_t NOTE      = 5;
-   constexpr static uint32_t FAILURE   = 2;
-   constexpr static uint32_t SUCCESS   = 1;
-   constexpr static uint32_t MESSAGE   = 0;
+   constexpr static uint32_t FATAL      = 12;
+   constexpr static uint32_t ERROR      = 10;
+   constexpr static uint32_t WARNING    = 7;
+   constexpr static uint32_t NOTE       = 5;
+   constexpr static uint32_t FAILURE    = 3;
+   constexpr static uint32_t SUCCESS    = 2;
+   constexpr static uint32_t FULL_DEBUG = 1;
+   constexpr static uint32_t MESSAGE    = 0;
 
    class OutputTarget
    {
@@ -53,7 +54,7 @@ namespace yam
             if ((log_priority < priority) && log_priority != MESSAGE)
                return;
 
-            if (frame_ptr != nullptr)
+            if (frame_ptr != nullptr && log_priority != MESSAGE)
                std::cout << "[" << *frame_ptr << "] ";
 
             if       (log_priority == FATAL)     std::cout << "-\033[1;91m☠\033[0m- ";
@@ -62,6 +63,7 @@ namespace yam
             else if  (log_priority == FAILURE)   std::cout << "-\033[1;31m✗\033[0m- ";
             else if  (log_priority == SUCCESS)   std::cout << "-\033[1;32m✔\033[0m- ";
             else if  (log_priority == NOTE)      std::cout << "-\033[1;94mℹ\033[0m- ";
+            else if  (log_priority == FULL_DEBUG)std::cout << "-\033[1;95mD\033[0m- ";
 
             worf(args...);
          }
