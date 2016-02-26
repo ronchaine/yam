@@ -29,6 +29,8 @@ namespace yam
          wheel::buffer_t      fdata;
 
       public:
+         const wheel::string  prefix;
+
          const FT_Face& get_face() const { return face; }
 
          Font(const wcl::string& file, uint32_t size);

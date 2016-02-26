@@ -9,7 +9,7 @@ namespace yam
    uint32_t    Font::l_count  = 0;
    uint32_t    Font::colour   = 0xffffffff;
 
-   Font::Font(const wcl::string& file, uint32_t size)
+   Font::Font(const wcl::string& file, uint32_t size) : prefix(file + "/" + size + "/")
    {
       if (l_count == 0)
       {
@@ -59,7 +59,7 @@ namespace yam
          for (int i = 0; i < ft_w; ++i) for (int j = 0; j < ft_h; ++j)
             remap[ft_h - j - 1][i] = *(face->glyph->bitmap.buffer + j * ft_w + i);
 
-         renderer.AtlasBuffer(YAM_FONTBUFFER_NAME, c, ft_w, ft_h, remap);
+         renderer.AtlasBuffer(YAM_FONTBUFFER_NAME, prefix + c, ft_w, ft_h, remap);
       }
    }
 
