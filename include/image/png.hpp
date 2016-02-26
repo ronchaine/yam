@@ -4,6 +4,7 @@
 #include <wheel.h>
 
 #include "../image.h"
+#include "../renderer.h"
 #include "../../deps/miniz.c"
 
 #define ZLIB_CHUNK 262144
@@ -140,17 +141,17 @@ namespace yam
    }
 
    template<>
-   uint32_t load_to_texture<format::PNG>(wcl::string& file, texture_t& target)
+   uint32_t load_to_texture<format::PNG>(wcl::string& file)
    {
       return WHEEL_UNIMPLEMENTED_FEATURE;
    }
 
-
    /*
       PNG functions
    */
-   uint32_t read_png(const wcl::buffer_t& data, uint32_t* w = nullptr, uint32_t* h = nullptr,
-                     uint32_t* c = nullptr, wcl::buffer_t* target = nullptr)
+   inline uint32_t read_png(const wcl::buffer_t& data, uint32_t* w = nullptr, uint32_t* h = nullptr,
+                     uint32_t* c = nullptr, wcl::buffer_t* target = nullptr,
+                     palette_t* palette = nullptr)
    {
       uint32_t nw, nh, nc;
       if (w == nullptr)
@@ -164,8 +165,6 @@ namespace yam
 
       wcl::buffer_t& buffer = (wcl::buffer_t&)data;
       buffer.seek(8);
-
-      uint32_t idat_count = 0;
 
       while(buffer.pos() < buffer.size())
       {
@@ -232,11 +231,7 @@ namespace yam
          log(ERROR, "Malformed PNG file\n");
          return WHEEL_INVALID_FORMAT;
       }
-/*
-      *w = *(uint32_t*)(&(chunks[0]->data[0]));
-      *h = *(uint32_t*)(&(chunks[0]->data[0]) + 4);
-      *h = *(uint32_t*)(&(chunks[0]->data[0]) + 4);
-*/
+
       uint8_t bpp, imgtype, cmethod, filter, interlace;
 
       chunks[0]->data.seek(0);
@@ -249,7 +244,6 @@ namespace yam
       filter = chunks[0]->data.read_le<uint8_t>();
       interlace = chunks[0]->data.read_le<uint8_t>();
 
-      bool supported_format = true;
       wcl::string type_string;
 
       if ((bpp < 8) || (cmethod != 0) || (filter != 0))
@@ -287,10 +281,177 @@ namespace yam
          type_string = "unrecognized";
       }
 
-      log(FULL_DEBUG, "reading ",type_string," PNG image: ",*w,"x",*h,", ", bpp," bits per sample. ",
-          *c," channels\n");
+      log(FULL_DEBUG, "Reading ",type_string," PNG image: ",*w,"x",*h,", ",
+         (uint32_t)bpp," bits per sample. ", *c," channels\n");
 
-      return 0;
+      if (imgtype == 3)
+      {
+         uint32_t plte = ~0;
+         uint32_t trns = ~0;
+
+         for (uint32_t it = 0; it < chunks.size(); ++it)
+         {
+            wcl::string s(chunks[it]->type, 4);
+            if (s == "PLTE")
+               plte = it;
+            else if (s == "tRNS")
+               trns = it;
+         }
+
+         if (plte == ~0)
+         {
+            for (int i = 0; i < chunks.size(); ++i) delete chunks[i];
+            log(ERROR, "Indexed image without palette\n");
+
+            return WHEEL_INVALID_FORMAT;
+         }
+
+         if (chunks[plte]->len % 3 != 0)
+         {
+            for (int i = 0; i < chunks.size(); ++i) delete chunks[i];
+            log(ERROR, "Malformed PLTE chunk in indexed image\n");
+
+            return WHEEL_INVALID_FORMAT;
+         }
+
+         uint32_t plte_entries = chunks[plte]->len / 3;
+         uint32_t trns_entries = 0;
+
+         if (trns != ~0)
+         {
+            chunks[trns]->data.seek(0);
+            trns_entries = chunks[plte]->len;
+         }
+         uint8_t r,g,b,a;
+
+         if (palette != nullptr)
+            palette->clear();
+
+         for (uint32_t i = 0; i < plte_entries; ++i)
+         {
+            chunks[plte]->data.seek(3 * i);
+            r = chunks[plte]->data.read<uint8_t>();
+            g = chunks[plte]->data.read<uint8_t>();
+            b = chunks[plte]->data.read<uint8_t>();
+
+            if (i < trns_entries)
+               a = chunks[trns]->data.read<uint8_t>();
+            else
+               a = 0xff;
+
+            // TODO: Do something with the palette entries?
+
+            if (palette != nullptr)
+               palette->push_back((r << 24) + (g << 16) + (b << 8) + a);
+         }
+
+         log(FULL_DEBUG, "Read ", plte_entries, " palette entries\n");
+      }
+
+      wcl::buffer_t concat_data, image_data;
+      uint32_t cnum = 0;
+
+      for (auto c : chunks)
+      {
+         wcl::string s(c->type, 4);
+         if (s == "IDAT")
+         {
+            cnum++;
+            log(FULL_DEBUG, "Reading IDAT chunk ",cnum,", size: ",c->len, "B\n");
+
+            concat_data.insert(std::end(concat_data), std::begin(c->data), std::end(c->data));
+         }
+      }
+
+      z_uncompress((const void*)&concat_data[0], concat_data.size(), image_data);
+      log(FULL_DEBUG, "Uncompressed image size: ",image_data.size(), " bytes\n");
+
+      uint8_t scanline_filter, pd;
+      size_t col, decoded_bytes = 0;
+      int32_t left, top, d;
+
+      if (target == nullptr)
+      {
+         log(FULL_DEBUG, "targeting nullptr buffer, bailing out\n");
+         return WHEEL_ERROR;
+      }
+
+      target->clear();
+
+      for (size_t row = 0; row < *h; ++row)
+      {
+         scanline_filter = image_data.read<uint8_t>();
+         col = 0;
+
+         while (col < *w)
+         {
+            if (bpp == 8)
+            {
+               for (size_t ch = 0; ch < *c; ++ch)
+               {
+                  pd = image_data.read<uint8_t>();
+
+                  if (col == 0)
+                     left = 0;
+                  else
+                     left = target->at(target->size() - 1 * *c);
+
+                  if (row == 0)
+                     top = 0;
+                  else
+                     top = target->at(target->size() - *c * *w);
+
+                  if (left == 0 && top == 0)
+                     d = 0;
+                  else
+                  {
+                     if (row == 0)
+                        d = 0;
+                     else if (col == 0)
+                        d = left;
+                     else
+                        d = target->at(target->size() - *c * *w - *c);
+                  }
+
+                  if (scanline_filter == 0)
+                  {
+                     target->push_back(pd);
+                  } else if (scanline_filter == 1) {
+                     target->push_back(pd + left);
+                  } else if (scanline_filter == 2) {
+                     target->push_back(pd + top);
+                  } else if (scanline_filter == 3) {
+                     target->push_back(pd + ((top + left) >> 1));
+                  } else if (scanline_filter == 4) {
+                     int32_t p = left + top - d;
+                     int32_t pa = abs(p - left);
+                     int32_t pb = abs(p - top);
+                     int32_t pc = abs(p - d);
+                     uint8_t pr;
+
+                     if ((pa <= pb) && (pa <= pc))
+                        pr = left;
+                     else if (pb <= pc)
+                        pr = top;
+                     else
+                        pr = d;
+
+                     target->push_back(pd + pr);
+                  }
+               }
+
+               decoded_bytes++;
+               col++;
+            } else {
+               log(FATAL, "Unimplemented function: can't decode bpp ",(uint32_t)bpp,"\n");
+               assert(0 && "nope");
+            }
+         }
+      }
+
+      log(FULL_DEBUG, "Read ", target->size(), " bytes of image data into buffer\n");
+
+      return WHEEL_OK;
    }
 }
 #endif

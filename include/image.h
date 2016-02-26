@@ -10,8 +10,8 @@ namespace yam
    uint32_t load_to_buffer(wcl::string& file, image_t& target);
 
    template<img_format_t T>
-   uint32_t load_to_texture(wcl::string& file, texture_t& target);
-
+   uint32_t load_to_texture(wcl::string& file);
+/*
    class Image
    {
       private:
@@ -29,6 +29,7 @@ namespace yam
          // write data
          uint32_t WritePNG(const wcl::string& file);
    };
+*/
 }
 
 #endif

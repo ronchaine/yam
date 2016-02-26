@@ -76,6 +76,8 @@ namespace yam
 
       wcl::buffer_t  image;
    };
+
+   typedef std::vector<uint32_t> palette_t;
 }
 
 #endif

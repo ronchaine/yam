@@ -167,6 +167,8 @@ namespace yam {
                          return;
                   }
 
+                  std::cout << "bound TU " << number << " to " << new_texture << "\n";
+
                   glActiveTexture(GL_TEXTURE0 + number);
                   glBindTexture(GL_TEXTURE_2D, renderer.texture[new_texture].id);
 
@@ -304,6 +306,8 @@ namespace yam {
                                 uint32_t w, uint32_t h,
                                 uint32_t components,
                                 uint32_t format = WHEEL_UNSIGNED_BYTE);
+
+         uint32_t CreateTexture(const wcl::string& name, texture_t&& texture);
 
          uint32_t UploadTextureData(const wcl::string& name,
                                     int32_t xoff, int32_t yoff,

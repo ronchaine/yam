@@ -28,13 +28,11 @@ namespace yam
          const float y_unit = 2.0f / (float)renderer.scrh * scale;
 
          vertex_t v0, v1, v2, v3;
-   /*
-         wheel::rect_t r;
-   */
+
          float tx_left = .0f;
-         float tx_right = .0f;
+         float tx_right = 1.0f;
          float tx_top = 1.0f;
-         float tx_bottom = 1.0f;
+         float tx_bottom = 0.0f;
 
          v0.s0 = 0xffff * tx_left;
          v0.t0 = 0xffff * tx_bottom;
@@ -162,8 +160,15 @@ namespace yam
                continue;
             }
 
+            if (c == ' ')
+            {
+               cursor_pos += (face->glyph->advance.x >> 6);
+               cursor_row += (face->glyph->advance.y >> 6);
+               continue;
+            }
+
             // If character is not in atlas, put it there.
-            if (renderer.GetAtlasPos(YAM_FONTBUFFER_NAME, c, &r) != WHEEL_OK)
+            if (renderer.GetAtlasPos(YAM_FONTBUFFER_NAME, font.prefix + c, &r) != WHEEL_OK)
             {
                uint32_t ft_w = face->glyph->bitmap.width;
                uint32_t ft_h = face->glyph->bitmap.rows;
@@ -173,7 +178,7 @@ namespace yam
                for (int i = 0; i < ft_w; ++i) for (int j = 0; j < ft_h; ++j)
                   remap[ft_h - j - 1][i] = *(face->glyph->bitmap.buffer + j * ft_w + i);
 
-               if (renderer.AtlasBuffer(YAM_FONTBUFFER_NAME, c, ft_w, ft_h, remap) != WHEEL_OK)
+               if (renderer.AtlasBuffer(YAM_FONTBUFFER_NAME, font.prefix + c, ft_w, ft_h, remap) != WHEEL_OK)
                   continue;
             }
 
