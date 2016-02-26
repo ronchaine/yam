@@ -13,6 +13,7 @@ namespace yam
    OutputTarget log;
 
    Font* monospace;
+   Font* symbola;
 
    bool BaseEngine::ok()
    {
@@ -203,7 +204,7 @@ void yam::BaseEngine::Render()
 {
    renderer.Clear(0.0, 0.0, 0.0);
 
-   renderer.SetShader("testi");
+   renderer.SetShader("builtin_primitive");
 
    draw::rectangle(4, 20, 20, 40, 40, 0xff0f30ef);
    draw::rectangle(3, 40, 40, 40, 40, 0xff0f30ef);
@@ -214,6 +215,12 @@ void yam::BaseEngine::Render()
 
    draw::set_cursor(10, 100);
    draw::text(0, *monospace, "This is text", 0xffffffff);
+
+   draw::set_cursor(10, 500);
+   draw::text(0, *symbola, "This is text", 0xffffffff);
+
+   renderer.SetShader("testi");
+   draw::rectangle(3, 40, 40, 400, 400, 0xffffffff);
 
    yam::renderer.Flush();
    renderer.Swap();
@@ -236,10 +243,14 @@ int main(int argc, char* argv[])
    yam::BaseEngine* game = new yam::BaseEngine();
    yam::Console* console = new yam::Console(game);
 
-   yam::renderer.AddShader("testi", yam::Shader("shaders/test.vs", "shaders/test.fs"));
+   yam::renderer.AddShader("builtin_primitive", yam::Shader("shaders/primitive.vs", "shaders/primitive.fs"));
    yam::renderer.AddShader("builtin_text", yam::Shader("shaders/gui.vs", "shaders/gui.fs"));
    yam::renderer.shader["builtin_text"].AddBinding(YAM_FONTBUFFER_NAME, "guiatlas");
 
+   yam::renderer.AddShader("testi", yam::Shader("shaders/test.vs", "shaders/test.fs"));
+   yam::renderer.shader["testi"].AddBinding(YAM_FONTBUFFER_NAME, "texture");
+
+   yam::symbola = new yam::Font("Symbola.ttf", 32);
    yam::monospace = new yam::Font("Cousine-Regular.ttf", 11);
 
    if (!game->ok())
@@ -260,15 +271,18 @@ int main(int argc, char* argv[])
    yam::log.set_frameptr(game->get_frameptr());
 
    yam::renderer.CreateTexture("test texture", 32, 32, 4);
-   yam::renderer.texture_unit[0] = "test texture";
-
-   std::cout << "texture unit 0 bound to " << yam::renderer.texture_unit[0].current() << "\n";
 
    wcl::buffer_t* png = wcl::GetBuffer("content/test_diffuse.png");
    yam::read_png(*png);
 
+   yam::image_t img;
+
+   png = wcl::GetBuffer("content/test_paletted.png");
+   yam::read_png(*png, &img.width, &img.height, &img.channels, &img.image);
+
    game->Run();
 
+   delete yam::symbola;
    delete yam::monospace;
 
    delete console;
