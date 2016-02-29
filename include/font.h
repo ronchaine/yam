@@ -24,6 +24,8 @@ namespace yam
          static uint32_t      l_count;
          static uint32_t      colour;
 
+         float  line_spacing;
+
          FT_Face              face;
 
          wheel::buffer_t      fdata;
@@ -33,7 +35,9 @@ namespace yam
 
          const FT_Face& get_face() const { return face; }
 
-         Font(const wcl::string& file, uint32_t size);
+         inline float next_line() const { return line_spacing * face->height / 64.0f; }
+
+         Font(const wcl::string& file, uint32_t size, float line_spacing = 1.0f);
         ~Font();
    };
 }

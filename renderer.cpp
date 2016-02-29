@@ -242,14 +242,9 @@ namespace yam
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-/*
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-*/
       glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
       if (channels == 1)
@@ -267,6 +262,43 @@ namespace yam
 
       return WHEEL_OK;
    }
+
+   uint32_t Renderer::CreateTexture(const wcl::string& name, image_t& image)
+   {
+      texture_t ntex;
+
+      glGenTextures(1, &ntex.id);
+      ntex.w = image.width;
+      ntex.h = image.height;
+      ntex.channels = image.channels;
+      ntex.format = WHEEL_UNSIGNED_BYTE;
+
+      glBindTexture(GL_TEXTURE_2D, ntex.id);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+      glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+      if (image.channels == 1)
+         glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, ntex.w, ntex.h, 0, GL_RED, ntex.format, (void*)(&image.image[0]));
+      else if (image.channels == 2)
+         glTexImage2D(GL_TEXTURE_2D, 0, GL_RG, ntex.w, ntex.h, 0, GL_RG, ntex.format, (void*)(&image.image[0]));
+      else if (image.channels == 3)
+         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, ntex.w, ntex.h, 0, GL_RGB, ntex.format, (void*)(&image.image[0]));
+      else if (image.channels == 4)
+         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, ntex.w, ntex.h, 0, GL_RGBA, ntex.format, (void*)(&image.image[0]));
+
+      texture[name] = ntex;
+
+      RebindActiveTexture();
+
+      return WHEEL_OK;
+   }
+
 
    uint32_t Renderer::UploadTextureData(const wcl::string& name,
                                         int32_t xoff, int32_t yoff,
@@ -373,7 +405,8 @@ namespace yam
 
       if (atlas[atlas_name].stored.count(sprite_name) == 0)
       {
-         log(WARNING, "Atlas '",atlas_name,"' doesn't have sprite '",sprite_name,"'\n");
+//       this log message causes horrible spam with fonts, since they autoload.
+//         log(WARNING, "Atlas '",atlas_name,"' doesn't have sprite '",sprite_name,"'\n");
          return WHEEL_RESOURCE_UNAVAILABLE;
       }
 

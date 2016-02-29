@@ -125,26 +125,6 @@ namespace yam
 
       return z_uncompress(&source[0], source.size() - 1, destination);
    }
-}
-
-namespace yam
-{
-   namespace format
-   {
-      constexpr int PNG = 1;
-   }
-
-   template<>
-   uint32_t load_to_buffer<format::PNG>(wcl::string& file, image_t& target)
-   {
-      return WHEEL_UNIMPLEMENTED_FEATURE;
-   }
-
-   template<>
-   uint32_t load_to_texture<format::PNG>(wcl::string& file)
-   {
-      return WHEEL_UNIMPLEMENTED_FEATURE;
-   }
 
    /*
       PNG functions
@@ -452,6 +432,38 @@ namespace yam
       log(FULL_DEBUG, "Read ", target->size(), " bytes of image data into buffer\n");
 
       return WHEEL_OK;
+   }
+}
+
+namespace yam
+{
+   namespace format
+   {
+      constexpr int PNG = 1;
+   }
+
+   template<>
+   uint32_t load_to_buffer<format::PNG>(const wcl::string& file, image_t& target)
+   {
+      wcl::buffer_t* png = wcl::GetBuffer(file);
+      read_png(*png, &target.width, &target.height, &target.channels, &target.image);
+      wcl::DeleteBuffer(file);
+
+      return WHEEL_UNIMPLEMENTED_FEATURE;
+   }
+
+   template<>
+   uint32_t load_to_texture<format::PNG>(const wcl::string& texture, const wcl::string& file)
+   {
+      image_t image;
+      load_to_buffer<format::PNG>(file, image);
+
+      flip_vertical(image);
+
+//      renderer.CreateTexture(file, image.width, image.height, image.channels);
+      renderer.CreateTexture(texture, image);
+
+      return WHEEL_UNIMPLEMENTED_FEATURE;
    }
 }
 #endif

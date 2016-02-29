@@ -9,7 +9,8 @@ namespace yam
    uint32_t    Font::l_count  = 0;
    uint32_t    Font::colour   = 0xffffffff;
 
-   Font::Font(const wcl::string& file, uint32_t size) : prefix(file + "/" + size + "/")
+   Font::Font(const wcl::string& file, uint32_t size, float ls)
+   : prefix(file + "/" + size + "/"), line_spacing(ls)
    {
       if (l_count == 0)
       {

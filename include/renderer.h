@@ -46,14 +46,7 @@ namespace yam
 
          return false;
       }
-/*
-      rord_t& operator()(uint32_t z, const wcl::string& mat)
-      {
-         z_order = z;
-         shader = mat;
-         return *this;
-      }
-*/
+
       rord_t(uint32_t z, const wcl::string& mat, GLenum at = GL_TRIANGLES)
       {
          z_order = z;
@@ -307,7 +300,7 @@ namespace yam {
                                 uint32_t components,
                                 uint32_t format = WHEEL_UNSIGNED_BYTE);
 
-         uint32_t CreateTexture(const wcl::string& name, texture_t&& texture);
+         uint32_t CreateTexture(const wcl::string& name, image_t& image);
 
          uint32_t UploadTextureData(const wcl::string& name,
                                     int32_t xoff, int32_t yoff,

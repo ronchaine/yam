@@ -156,7 +156,7 @@ namespace yam
             if (c == '\n')
             {
                cursor_pos = cursor_newline_pos;
-               cursor_row -= face->glyph->bitmap.rows * 3.0f;
+               cursor_row -= font.next_line();
                continue;
             }
 
