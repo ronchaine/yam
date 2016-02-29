@@ -1,6 +1,5 @@
 #include "include/defaultshaders.h"
-#include "include/baseengine.h"
-#include "include/console.h"
+#include "include/game.h"
 #include "include/image.h"
 #include "include/image/png.hpp"
 
@@ -15,12 +14,12 @@ namespace yam
    Font* monospace;
    Font* symbola;
 
-   bool BaseEngine::ok()
+   bool Game::ok()
    {
       return !(int_flags && YAM_ERROR);
    }
 
-   BaseEngine::BaseEngine()
+   Game::Game()
    {
       t_active = false;
       int_flags = YAM_CLEAR_FLAGS;
@@ -58,22 +57,22 @@ namespace yam
       }
    }
 
-   BaseEngine::~BaseEngine()
+   Game::~Game()
    {
       SDL_Quit();
    }
 
-   bool BaseEngine::WindowIsOpen()
+   bool Game::WindowIsOpen()
    {
       return renderer.Alive();
    }
 
-   void BaseEngine::SwapBuffers()
+   void Game::SwapBuffers()
    {
       renderer.Swap();
    }
 
-   inline uint32_t BaseEngine::GetEvents(wheel::EventList* events)
+   inline uint32_t Game::GetEvents(wheel::EventList* events)
    {
       SDL_Event sdlevent;
       while(SDL_PollEvent(&sdlevent))
@@ -165,7 +164,7 @@ namespace yam
       return WHEEL_OK;
    }
 
-   bool BaseEngine::Run()
+   bool Game::Run()
    {
       if (!t_active)
       {
@@ -200,7 +199,21 @@ namespace yam
    }
 }
 
-void yam::BaseEngine::Render()
+const wcl::string tiles()
+{
+   wcl::string rval;
+
+   for (int i = 0; i < 0x2b; ++i)
+   {
+      rval += char32_t(0x1f000 + i);
+      if ((i % 8) == 0)
+         rval += char32_t('\n');
+   }
+
+   return rval;
+}
+
+void yam::Game::Render()
 {
    renderer.Clear(0.0, 0.0, 0.0);
 
@@ -214,10 +227,10 @@ void yam::BaseEngine::Render()
    draw::line(10, 50, 50, 600, 80, 0xffffffff);
 
    draw::set_cursor(10, 100);
-   draw::text(0, *monospace, "This is text", 0xffffffff);
+   draw::text(0, *monospace, "This is text\n om nom nom", 0xffffffff);
 
    draw::set_cursor(10, 500);
-   draw::text(0, *symbola, "This is text", 0xffffffff);
+   draw::text(0, *symbola, tiles() + "And newline\n testing.", 0xffffffff);
 
    renderer.SetShader("testi");
    draw::rectangle(3, 40, 40, 400, 400, 0xffffffff);
@@ -226,7 +239,7 @@ void yam::BaseEngine::Render()
    renderer.Swap();
 }
 
-void yam::BaseEngine::Update()
+void yam::Game::Update()
 {
 }
 
@@ -240,18 +253,17 @@ int main(int argc, char* argv[])
       return 255;
    }
 
-   yam::BaseEngine* game = new yam::BaseEngine();
-   yam::Console* console = new yam::Console(game);
+   yam::Game* game = new yam::Game();
 
    yam::renderer.AddShader("builtin_primitive", yam::Shader("shaders/primitive.vs", "shaders/primitive.fs"));
    yam::renderer.AddShader("builtin_text", yam::Shader("shaders/gui.vs", "shaders/gui.fs"));
    yam::renderer.shader["builtin_text"].AddBinding(YAM_FONTBUFFER_NAME, "guiatlas");
 
    yam::renderer.AddShader("testi", yam::Shader("shaders/test.vs", "shaders/test.fs"));
-   yam::renderer.shader["testi"].AddBinding(YAM_FONTBUFFER_NAME, "texture");
+   yam::renderer.shader["testi"].AddBinding("test texture", "texture");
 
-   yam::symbola = new yam::Font("Symbola.ttf", 32);
-   yam::monospace = new yam::Font("Cousine-Regular.ttf", 11);
+   yam::symbola = new yam::Font("Symbola.ttf", 35, 1.1f);
+   yam::monospace = new yam::Font("Cousine-Regular.ttf", 11, 0.3f);
 
    if (!game->ok())
    {
@@ -263,29 +275,19 @@ int main(int argc, char* argv[])
       yam::log(yam::SUCCESS, "Engine init successful\n");
    }
 
-   if (console->RunScript("autoexec.scr"))
-   {
-      yam::log(yam::WARNING, "error in running init script\n");
-   }
-
    yam::log.set_frameptr(game->get_frameptr());
 
-   yam::renderer.CreateTexture("test texture", 32, 32, 4);
-
-   wcl::buffer_t* png = wcl::GetBuffer("content/test_diffuse.png");
+   wcl::buffer_t* png = wcl::GetBuffer("content/test_paletted.png");
    yam::read_png(*png);
 
    yam::image_t img;
 
-   png = wcl::GetBuffer("content/test_paletted.png");
-   yam::read_png(*png, &img.width, &img.height, &img.channels, &img.image);
-
+   yam::load_to_texture<yam::format::PNG>("test texture", "content/test_diffuse.png");
    game->Run();
 
    delete yam::symbola;
    delete yam::monospace;
 
-   delete console;
    delete game;
 
    return 0;
