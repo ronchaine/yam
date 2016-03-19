@@ -276,13 +276,17 @@ int main(int argc, char* argv[])
    }
 
    yam::log.set_frameptr(game->get_frameptr());
-
-   wcl::buffer_t* png = wcl::GetBuffer("content/test_paletted.png");
-   yam::read_png(*png);
-
+/*
+    wcl::buffer_t* png = wcl::GetBuffer("content/test_paletted.png");
+    yam::read_png(*png);
+*/
    yam::image_t img;
 
+   yam::load_to_buffer<yam::format::PNG>(img, "content/test_paletted.png");
+
    yam::load_to_texture<yam::format::PNG>("test texture", "content/test_diffuse.png");
+   yam::save_png("testout.png", img);
+
    game->Run();
 
    delete yam::symbola;

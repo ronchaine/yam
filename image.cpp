@@ -20,4 +20,15 @@ namespace yam
 
       std::swap(img.image, mod);
    }
+
+   void framebuffer_to_image(size_t scrw, size_t scry, image_t& img)
+   {
+      img.width = scrw;
+      img.height = scry;
+      img.channels = 4;
+      img.image.resize(scrw * scry * 4);
+
+      glReadPixels(0, 0, scrw, scry, GL_RGBA, GL_UNSIGNED_BYTE, &img.image[0]);
+   }
+
 }

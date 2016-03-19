@@ -59,6 +59,7 @@ namespace yam
 {
    typedef std::chrono::steady_clock::time_point timepoint_t;
    typedef uint32_t img_format_t;
+   typedef std::vector<uint32_t> palette_t;
 
    struct texture_t
    {
@@ -75,9 +76,8 @@ namespace yam
       uint32_t       channels;
 
       wcl::buffer_t  image;
+      palette_t      palette;
    };
-
-   typedef std::vector<uint32_t> palette_t;
 }
 
 #endif

@@ -7,12 +7,13 @@
 namespace yam
 {
    template<img_format_t T>
-   uint32_t load_to_buffer(const wcl::string& file, image_t& target);
+   uint32_t load_to_buffer(image_t& target, const wcl::string& file);
 
    template<img_format_t T>
    uint32_t load_to_texture(const wcl::string& texture, const wcl::string& file);
 
    void flip_vertical(image_t& img);
+   void framebuffer_to_image(image_t& img);
 /*
    class Image
    {
