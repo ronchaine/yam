@@ -12,7 +12,7 @@ c_compiler = clang
 
 libs = -Lbuild/src `sdl2-config --libs` $
        `freetype-config --libs` $
-       -lwheel_static -lGLEW -lGL -lphysfs
+       -lwheel -lGLEW -lGL -lphysfs
 
 rule compile
    command = $cxx_compiler -MMD -MT $out -MF $out.d $cflags -c $in -o $out
