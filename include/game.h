@@ -83,7 +83,7 @@ namespace yam
          // Update everything
          void              Update();
 
-         Game();
+         Game(uint32_t scrw = 800, uint32_t scrh = 480);
         ~Game();
    };
 }

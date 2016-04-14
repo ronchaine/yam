@@ -19,7 +19,7 @@ namespace yam
       return !(int_flags && YAM_ERROR);
    }
 
-   Game::Game()
+   Game::Game(uint32_t scrw, uint32_t scrh)
    {
       t_active = false;
       int_flags = YAM_CLEAR_FLAGS;
@@ -30,7 +30,7 @@ namespace yam
          int_flags |= YAM_ERROR;
       }
 
-      if (renderer.Init())
+      if (renderer.Init(scrw, scrh))
          int_flags |= YAM_ERROR;
 
       if (!SDL_NumJoysticks())
@@ -80,11 +80,14 @@ namespace yam
 //         wheel::Event* n_ptr = new wheel::Event;
 //         wheel::Event& newevent = *n_ptr;
          wheel::Event newevent;
-
          if (sdlevent.type == SDL_WINDOWEVENT)
          {
             switch (sdlevent.window.event)
             {
+               case SDL_WINDOWEVENT_RESIZED:
+               case SDL_WINDOWEVENT_SIZE_CHANGED:
+                  yam::log(WARNING, "Window size changed\n");
+                  continue;
                case SDL_WINDOWEVENT_CLOSE:
                   renderer.Destroy();
                   continue;
@@ -216,24 +219,19 @@ const wcl::string tiles()
 void yam::Game::Render()
 {
    renderer.Clear(0.0, 0.0, 0.0);
-
    renderer.SetShader("builtin_primitive");
+
+   draw::rectangle(10, 0, 0, 5, 5, 0x0000ffff);
 
    draw::rectangle(4, 20, 20, 40, 40, 0xff0f30ef);
    draw::rectangle(3, 40, 40, 40, 40, 0xff0f30ef);
 
    draw::triangle(2, 100, 20, 120, 20, 60, 50, 0xff00ffff);
 
-   draw::line(10, 50, 50, 600, 80, 0xffffffff);
-
-   draw::set_cursor(10, 100);
-   draw::text(0, *monospace, "This is text\n om nom nom", 0xffffffff);
-
-   draw::set_cursor(10, 500);
-   draw::text(0, *symbola, tiles() + "And newline\n testing.", 0xffffffff);
+   draw::line(1, 50, 50, 600, 80, 0xffffffff);
 
    renderer.SetShader("testi");
-   draw::rectangle(3, 40, 40, 400, 400, 0xffffffff);
+   draw::rectangle(3, 40, 40, 240, 240, 0xffffffff);
 
    yam::renderer.Flush();
    renderer.Swap();
@@ -253,7 +251,7 @@ int main(int argc, char* argv[])
       return 255;
    }
 
-   yam::Game* game = new yam::Game();
+   yam::Game* game = new yam::Game(1920, 1080);
 
    yam::renderer.AddShader("builtin_primitive", yam::Shader("shaders/primitive.vs", "shaders/primitive.fs"));
    yam::renderer.AddShader("builtin_text", yam::Shader("shaders/gui.vs", "shaders/gui.fs"));
@@ -264,6 +262,8 @@ int main(int argc, char* argv[])
 
    yam::symbola = new yam::Font("Symbola.ttf", 35, 1.1f);
    yam::monospace = new yam::Font("Cousine-Regular.ttf", 11, 0.3f);
+
+   yam::renderer.CreateTarget("test_target", 480, 270, 4);
 
    if (!game->ok())
    {
@@ -285,7 +285,7 @@ int main(int argc, char* argv[])
    yam::load_to_buffer<yam::format::PNG>(img, "content/test_paletted.png");
 
    yam::load_to_texture<yam::format::PNG>("test texture", "content/test_diffuse.png");
-   yam::save_png("testout.png", img);
+//   yam::save_png("testout.png", img);
 
    game->Run();
 

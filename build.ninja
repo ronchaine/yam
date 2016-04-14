@@ -37,11 +37,11 @@ build $builddir/util.o:                      compile util.cpp
 #build $builddir/miniz.o:                     compilec deps/miniz.c
 build $builddir/image.o:                     compile image.cpp
 
-build yam.exec:                              link $builddir/font.o $
+build yam:                                   link $builddir/font.o $
                                                   $builddir/game.o $
                                                   $builddir/shader.o $
                                                   $builddir/renderer.o $
                                                   $builddir/util.o $
                                                   $builddir/image.o
 
-default yam.exec
+default yam

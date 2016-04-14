@@ -1,4 +1,4 @@
-#version 140
+#version 330
 precision highp float;
 
 in vec4 ex_col;

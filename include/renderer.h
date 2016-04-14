@@ -99,6 +99,15 @@ namespace yam {
       atlas_t() : texture(nullptr) {}
    };
 
+   struct rendertarget_t
+   {
+      GLuint            id;
+      GLuint            depth_buf;
+
+      uint32_t          w;
+      uint32_t          h;
+   };
+
    class Renderer; extern Renderer renderer;
 
    class Renderer
@@ -160,7 +169,7 @@ namespace yam {
                          return;
                   }
 
-                  std::cout << "bound TU " << number << " to " << new_texture << "\n";
+                  log(FULL_DEBUG, "bound TU ", number, " to ", new_texture,"\n");
 
                   glActiveTexture(GL_TEXTURE0 + number);
                   glBindTexture(GL_TEXTURE_2D, renderer.texture[new_texture].id);
@@ -251,12 +260,14 @@ namespace yam {
          bool           alive;
 
          wcl::string    current_shader;
+         wcl::string    current_target;
 
          std::unordered_map<wcl::string, Shader>      shaderlist;
          std::unordered_map<wcl::string, Font>        fontlist;
 
          std::unordered_map<wcl::string, texture_t>   texture;
          std::unordered_map<wcl::string, atlas_t>     atlas;
+         std::unordered_map<wcl::string, rendertarget_t> target;
 
          std::map<rord_t, rbuffer_t>                  buffers;
 
@@ -279,6 +290,28 @@ namespace yam {
          void     SetShader(const wcl::string& name);
 
          inline wcl::string GetShader() { return current_shader; }
+
+         // Render to texture, etc.
+         uint32_t CreateTarget(const wcl::string& name,
+                               uint32_t width, uint32_t height,
+                               uint32_t channels,
+                               uint32_t mrt_level = 1,
+                               bool has_depth = false);
+
+         void     SetTarget(const wcl::string& name);
+
+         inline void SetTarget(int)
+         {
+            SetTarget("");
+         }
+
+         inline void RebindActiveTarget()
+         {
+            if (current_target == "")
+               glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            else
+               glBindFramebuffer(GL_FRAMEBUFFER, target[current_target].id);
+         }
 
          void     AddVertex(vertex_t vert, uint32_t z_order = 0, GLenum etype = GL_TRIANGLES);
 
@@ -309,7 +342,6 @@ namespace yam {
 
          void     DeleteTexture(const wcl::string& name);
 
-
          uint32_t CreateAtlas(const wcl::string& name, uint32_t size,
                               uint32_t components, uint32_t format = WHEEL_UNSIGNED_BYTE);
          uint32_t AtlasBuffer(const wcl::string& atlas_name, const wcl::string& sprite_name,
@@ -324,7 +356,7 @@ namespace yam {
             glBindTexture(GL_TEXTURE_2D, texture[texture_unit[texture_unit[0].active_unit()].current()].id);
          }
 
-         uint32_t Init(uint32_t w = 800, uint32_t h = 600);
+         uint32_t Init(uint32_t w = 800, uint32_t h = 480);
          void     Destroy();
 
          void     Clear(float r, float g, float b)

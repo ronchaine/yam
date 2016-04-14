@@ -53,7 +53,7 @@ namespace yam
 
       log(NOTE, "Using GLEW " , glewGetString(GLEW_VERSION), "\n");
 
-      glViewport(0.0, 0.0, 800.0, 600.0);
+      glViewport(0.0, 0.0, w, h);
 
       GLuint VertexArrayID;
       glGenVertexArrays(1, &VertexArrayID);
@@ -179,9 +179,20 @@ namespace yam
 
    void Renderer::Flush()
    {
+      std::cout << "--flush buffers--\n";
+      int bufnum = 0;
       static wcl::string cs = "______do___not____use____";
       for (auto& buf : buffers)
       {
+         bufnum++;
+         std::cout << "-- current buffer: " << bufnum << "; shader: " << buf.first.shader << ", zorder:" << buf.first.z_order;
+         if (buf.first.array_type == GL_TRIANGLES)
+            std::cout << ", array type: triangles";
+         else if (buf.first.array_type == GL_LINES)
+            std::cout << ", array type: lines";
+
+         std::cout << ", vbo number:" << buf.second.vbo << "\n";
+
          if (cs != buf.first.shader)
          {
             if (UseShader(buf.first.shader))
@@ -191,6 +202,16 @@ namespace yam
          }
 
          size_t rsize = buf.second.vertex_data.size();
+
+         size_t elem_count = rsize / sizeof(vertex_t);
+
+         if (buf.first.array_type == GL_TRIANGLES)
+         {
+            if (elem_count % 3 != 0) { std::cout << "invalid elem_count: " << elem_count << "\n"; }
+         } else if (buf.first.array_type == GL_LINES)
+         {
+            if (elem_count % 2 != 0) { std::cout << "invalid elem_count: " << elem_count << "\n"; }
+         }
 
          glBindBuffer(GL_ARRAY_BUFFER, buf.second.vbo);
          glBufferData(GL_ARRAY_BUFFER, rsize, &buf.second.vertex_data[0], GL_DYNAMIC_DRAW);
@@ -222,6 +243,82 @@ namespace yam
 
          buf.second.vertex_data.clear();
          buf.second.vertex_data.seek(0);
+      }
+   }
+
+   uint32_t Renderer::CreateTarget(const wcl::string& name,
+                                   uint32_t width, uint32_t height,
+                                   uint32_t channels,
+                                   uint32_t mrt_level,
+                                   bool has_depth)
+   {
+      rendertarget_t rtarget;
+
+      glGenFramebuffers(1, &rtarget.id);
+      glBindFramebuffer(GL_FRAMEBUFFER, rtarget.id);
+
+      for (int i = 0; i < mrt_level; ++i)
+      {
+         CreateTexture(name + "_color" + i, width, height, channels, WHEEL_UNSIGNED_BYTE);
+      }
+
+      if (has_depth)
+      {
+         glGenRenderbuffers(1, &rtarget.depth_buf);
+         glBindRenderbuffer(GL_RENDERBUFFER, rtarget.depth_buf);
+         glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
+         glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rtarget.depth_buf);
+      } else {
+         rtarget.depth_buf = 0;
+      }
+
+      GLenum drawbuffers[mrt_level];
+
+      for (int i = 0; i < mrt_level; ++i)
+      {
+         glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, texture[name + "_color" + i].id, 0);
+         drawbuffers[i] = GL_COLOR_ATTACHMENT0 + i;
+      }
+
+      glDrawBuffers(1, drawbuffers);
+
+      if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+      {
+         log(ERROR, "Could not create render target '", name, "'\n");
+         return WHEEL_ERROR;
+      }
+
+      rtarget.w = width;
+      rtarget.h = height;
+
+      log(SUCCESS, "Created render target '", name, "'\n");
+
+      target[name] = rtarget;
+      RebindActiveTarget();
+
+      return WHEEL_OK;
+   }
+
+   void Renderer::SetTarget(const wcl::string& name)
+   {
+      if ((target.count(name) == 0) && (name != ""))
+      {
+         log(ERROR, "Asking for non-existant render target '",name,"'");
+         return;
+      }
+
+      Flush();
+
+      current_target = name;
+      if (name != "")
+      {
+         glViewport(0.0, 0.0, target[current_target].w, target[current_target].h);
+         glBindFramebuffer(GL_FRAMEBUFFER, target[current_target].id);
+      }
+      else
+      {
+         glViewport(0.0, 0.0, scrw, scrh);
+         glBindFramebuffer(GL_FRAMEBUFFER, 0);
       }
    }
 
@@ -257,7 +354,6 @@ namespace yam
          glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, w, h, 0, GL_RGBA, format, (void*)0);
 
       texture[name] = ntex;
-
       RebindActiveTexture();
 
       return WHEEL_OK;
