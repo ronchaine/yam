@@ -25,19 +25,18 @@ namespace yam
       uint32_t       z_order;
       wcl::string    shader;
       GLenum         array_type;
-
+/*
       inline size_t hash() const noexcept
       {
-         std::cout << ((shader.hash() + z_order) ^ array_type) << "\n";
          return (shader.hash() + z_order) ^ array_type;
       }
-
+*/
       bool operator<(const rord_t& value) const
       {
          return std::tie(value.z_order, shader, value.array_type)
               < std::tie(z_order, value.shader, array_type);
       }
-
+/*
       bool operator==(const rord_t& other) const
       {
          if ((z_order == other.z_order) && (shader == other.shader)
@@ -46,7 +45,7 @@ namespace yam
 
          return false;
       }
-
+*/
       rord_t(uint32_t z, const wcl::string& mat, GLenum at = GL_TRIANGLES)
       {
          z_order = z;
@@ -58,6 +57,7 @@ namespace yam
 
 namespace std
 {
+/*
    template<>
    struct hash<yam::rord_t>
    {
@@ -66,6 +66,7 @@ namespace std
          return __s.hash();
       }
    };
+*/
 }
 
 
@@ -249,7 +250,7 @@ namespace yam {
             if (renderer.shaderlist.count(sh))
                return renderer.shaderlist[sh];
 
-            assert(0);
+            assert(0 && "array index out of range");
          }
       };
 

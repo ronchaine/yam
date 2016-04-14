@@ -179,20 +179,9 @@ namespace yam
 
    void Renderer::Flush()
    {
-      std::cout << "--flush buffers--\n";
-      int bufnum = 0;
       static wcl::string cs = "______do___not____use____";
       for (auto& buf : buffers)
       {
-         bufnum++;
-         std::cout << "-- current buffer: " << bufnum << "; shader: " << buf.first.shader << ", zorder:" << buf.first.z_order;
-         if (buf.first.array_type == GL_TRIANGLES)
-            std::cout << ", array type: triangles";
-         else if (buf.first.array_type == GL_LINES)
-            std::cout << ", array type: lines";
-
-         std::cout << ", vbo number:" << buf.second.vbo << "\n";
-
          if (cs != buf.first.shader)
          {
             if (UseShader(buf.first.shader))
@@ -202,16 +191,6 @@ namespace yam
          }
 
          size_t rsize = buf.second.vertex_data.size();
-
-         size_t elem_count = rsize / sizeof(vertex_t);
-
-         if (buf.first.array_type == GL_TRIANGLES)
-         {
-            if (elem_count % 3 != 0) { std::cout << "invalid elem_count: " << elem_count << "\n"; }
-         } else if (buf.first.array_type == GL_LINES)
-         {
-            if (elem_count % 2 != 0) { std::cout << "invalid elem_count: " << elem_count << "\n"; }
-         }
 
          glBindBuffer(GL_ARRAY_BUFFER, buf.second.vbo);
          glBufferData(GL_ARRAY_BUFFER, rsize, &buf.second.vertex_data[0], GL_DYNAMIC_DRAW);

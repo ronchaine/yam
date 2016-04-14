@@ -218,24 +218,39 @@ const wcl::string tiles()
 
 void yam::Game::Render()
 {
-   renderer.Clear(0.0, 0.0, 0.0);
-   renderer.SetShader("builtin_primitive");
+   {
+//      yam::renderer.SetTarget("test_target");
+      renderer.Clear(0.0, 0.0, 0.0);
 
-   draw::rectangle(10, 0, 0, 5, 5, 0x0000ffff);
+      renderer.SetShader("builtin_primitive");
 
-   draw::rectangle(4, 20, 20, 40, 40, 0xff0f30ef);
-   draw::rectangle(3, 40, 40, 40, 40, 0xff0f30ef);
+      draw::rectangle(4, 20, 20, 40, 40, 0xff0f30ef);
+      draw::rectangle(3, 40, 40, 40, 40, 0xff0f30ef);
 
-   draw::triangle(2, 100, 20, 120, 20, 60, 50, 0xff00ffff);
+      draw::triangle(2, 100, 20, 120, 20, 60, 50, 0xff00ffff);
 
-   draw::line(1, 50, 50, 600, 80, 0xffffffff);
+      draw::line(1, 50, 50, 600, 80, 0xffffffff);
 
-   renderer.SetShader("testi");
-   draw::rectangle(3, 40, 40, 240, 240, 0xffffffff);
+      draw::set_cursor(10, 100);
+      draw::text(0, *monospace, "This is text\n om nom nom", 0xffffffff);
 
-   yam::renderer.Flush();
-   renderer.Swap();
-}
+      renderer.SetShader("testi");
+      draw::rectangle(3, 40, 40, 240, 240, 0xffffffff);
+
+      draw::set_cursor(10, 500);
+      draw::text(0, *symbola, tiles() + "And newline\n testing.", 0xffffffff);
+
+      yam::renderer.Flush();
+      renderer.Swap();
+/*
+      yam::renderer.SetTarget(0);
+      yam::renderer.SetShader("final");
+      draw::rectangle(0, 0, 0, renderer.scrw, renderer.scrh, 0xffffffff);
+
+      yam::renderer.Flush();
+      renderer.Swap();
+*/
+   }}
 
 void yam::Game::Update()
 {
@@ -243,6 +258,9 @@ void yam::Game::Update()
 
 int main(int argc, char* argv[])
 {
+   wheel::string a("builtin_primitive");
+   wheel::string b("testi");
+
    uint32_t cerr = wcl::initialise(argc, argv);
 
    if (cerr)
@@ -264,6 +282,9 @@ int main(int argc, char* argv[])
    yam::monospace = new yam::Font("Cousine-Regular.ttf", 11, 0.3f);
 
    yam::renderer.CreateTarget("test_target", 480, 270, 4);
+
+   yam::renderer.AddShader("final", yam::Shader("shaders/test.vs", "shaders/post.fs"));
+   yam::renderer.shader["final"].AddBinding("test_target_color0", "texture");
 
    if (!game->ok())
    {
