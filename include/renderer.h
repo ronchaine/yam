@@ -306,6 +306,22 @@ namespace yam {
             SetTarget("");
          }
 
+         inline uint32_t GetTargetWidth()
+         {
+            if (current_target == "")
+               return scrw;
+
+            return target[current_target].w;
+         }
+
+         inline uint32_t GetTargetHeight()
+         {
+            if (current_target == "")
+               return scrh;
+
+            return target[current_target].h;
+         }
+
          inline void RebindActiveTarget()
          {
             if (current_target == "")

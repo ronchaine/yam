@@ -219,7 +219,7 @@ const wcl::string tiles()
 void yam::Game::Render()
 {
    {
-//      yam::renderer.SetTarget("test_target");
+      yam::renderer.SetTarget("test_target");
       renderer.Clear(0.0, 0.0, 0.0);
 
       renderer.SetShader("builtin_primitive");
@@ -231,26 +231,28 @@ void yam::Game::Render()
 
       draw::line(1, 50, 50, 600, 80, 0xffffffff);
 
-      draw::set_cursor(10, 100);
-      draw::text(0, *monospace, "This is text\n om nom nom", 0xffffffff);
-
       renderer.SetShader("testi");
       draw::rectangle(3, 40, 40, 240, 240, 0xffffffff);
+
+      yam::renderer.Flush();
+      renderer.Swap();
+
+      yam::renderer.SetTarget(0);
+      renderer.Clear(0.0, 0.0, 0.0);
+      yam::renderer.SetShader("final");
+      draw::rectangle(0, 0, 0, renderer.scrw, renderer.scrh, 0xffffffff);
+
+      draw::set_cursor(10, 100);
+      draw::text(0, *monospace, "This is text\n om nom nom", 0xffffffff);
 
       draw::set_cursor(10, 500);
       draw::text(0, *symbola, tiles() + "And newline\n testing.", 0xffffffff);
 
       yam::renderer.Flush();
       renderer.Swap();
-/*
-      yam::renderer.SetTarget(0);
-      yam::renderer.SetShader("final");
-      draw::rectangle(0, 0, 0, renderer.scrw, renderer.scrh, 0xffffffff);
 
-      yam::renderer.Flush();
-      renderer.Swap();
-*/
-   }}
+   }
+}
 
 void yam::Game::Update()
 {

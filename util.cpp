@@ -24,8 +24,8 @@ namespace yam
                      uint32_t w, uint32_t h, uint32_t c,
                      const wcl::string& sprite, float scale)
       {
-         const float x_unit = 2.0f / (float)renderer.scrw * scale;
-         const float y_unit = 2.0f / (float)renderer.scrh * scale;
+         const float x_unit = 2.0f / (float)renderer.GetTargetWidth() * scale;
+         const float y_unit = 2.0f / (float)renderer.GetTargetHeight() * scale;
 
          vertex_t v0, v1, v2, v3;
 
@@ -73,8 +73,8 @@ namespace yam
                     uint32_t c
                    )
       {
-         const float x_unit = 2.0f / (float)renderer.scrw;
-         const float y_unit = 2.0f / (float)renderer.scrh;
+         const float x_unit = 2.0f / (float)renderer.GetTargetWidth();
+         const float y_unit = 2.0f / (float)renderer.GetTargetHeight();
 
          vertex_t v0, v1, v2;
 
@@ -101,8 +101,8 @@ namespace yam
                 uint32_t c
                )
       {
-         const float x_unit = 2.0f / (float)renderer.scrw;
-         const float y_unit = 2.0f / (float)renderer.scrh;
+         const float x_unit = 2.0f / (float)renderer.GetTargetWidth();
+         const float y_unit = 2.0f / (float)renderer.GetTargetHeight();
 
          vertex_t v0, v1;
 
@@ -134,8 +134,8 @@ namespace yam
 
          double cursor_newline_pos = cursor_pos;
 
-         const double x_unit = 2.0f / (float)renderer.scrw;
-         const double y_unit = 2.0f / (float)renderer.scrh;
+         const float x_unit = 2.0f / (float)renderer.GetTargetWidth();
+         const float y_unit = 2.0f / (float)renderer.GetTargetHeight();
 
          uint16_t left, right, top, bottom;
          float leftv, rightv, bottomv, topv;
