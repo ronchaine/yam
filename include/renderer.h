@@ -357,6 +357,10 @@ namespace yam {
                                     uint32_t width, uint32_t height,
                                     void* pixel_data);
 
+         uint32_t UploadTextureData(const wcl::string& name, image_t& image);
+
+         uint32_t UpdateTexture(const wcl::string& name, image_t& image);
+
          void     DeleteTexture(const wcl::string& name);
 
          uint32_t CreateAtlas(const wcl::string& name, uint32_t size,
@@ -376,10 +380,19 @@ namespace yam {
          uint32_t Init(uint32_t w = 800, uint32_t h = 480);
          void     Destroy();
 
-         void     Clear(float r, float g, float b)
+         void     Clear(float r, float g, float b, float a = 1.0)
          {
-            glClearColor(r,g,b, .0);
+            glClearColor(r,g,b,a);
             glClear(GL_COLOR_BUFFER_BIT);
+         }
+
+         void     Clear(uint32_t c)
+         {
+            float r = (c & 0xff000000) / 255.0;
+            float g = (c & 0x00ff0000) / 255.0;
+            float b = (c & 0x0000ff00) / 255.0;
+            float a = (c & 0x000000ff) / 255.0;
+            Clear(r,g,b,a);
          }
 
          Renderer() : window(nullptr), context(nullptr), alive(false) {}

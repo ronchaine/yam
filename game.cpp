@@ -220,10 +220,10 @@ void yam::Game::Render()
 {
    {
       yam::renderer.SetTarget("test_target");
-      renderer.Clear(0.0, 0.0, 0.0);
+      renderer.Clear(0xff0000ff);
 
       renderer.SetShader("builtin_primitive");
-
+/*
       draw::rectangle(4, 20, 20, 40, 40, 0xff0f30ef);
       draw::rectangle(3, 40, 40, 40, 40, 0xff0f30ef);
 
@@ -233,6 +233,9 @@ void yam::Game::Render()
 
       renderer.SetShader("testi");
       draw::rectangle(3, 40, 40, 240, 240, 0xffffffff);
+*/
+      renderer.SetShader("testi");
+      draw::rectangle(3, 40, 40, 20, 30, 0xffffffff);
 
       yam::renderer.Flush();
       renderer.Swap();
@@ -240,14 +243,15 @@ void yam::Game::Render()
       yam::renderer.SetTarget(0);
       renderer.Clear(0.0, 0.0, 0.0);
       yam::renderer.SetShader("final");
-      draw::rectangle(0, 0, 0, renderer.scrw, renderer.scrh, 0xffffffff);
 
+      draw::rectangle(0, 0, 0, renderer.scrw, renderer.scrh, 0xffffffff);
+/*
       draw::set_cursor(10, 100);
       draw::text(0, *monospace, "This is text\n om nom nom", 0xffffffff);
 
       draw::set_cursor(10, 500);
       draw::text(0, *symbola, tiles() + "And newline\n testing.", 0xffffffff);
-
+*/
       yam::renderer.Flush();
       renderer.Swap();
 
@@ -256,6 +260,20 @@ void yam::Game::Render()
 
 void yam::Game::Update()
 {
+}
+
+void fill_template(yam::image_t& sprite_template)
+{
+   //#799d3d
+   for (size_t i = 0; i < sprite_template.width; ++i)
+   for (size_t j = 0; j < sprite_template.height; ++j)
+   {
+      std::cout << std::hex << sprite_template[{i,j}].value() << "\n";
+      if (sprite_template[{i,j}].value() == 0x799d3dff)
+      {
+         sprite_template[{i, j}] = 0x303030ff;
+      }
+   }
 }
 
 int main(int argc, char* argv[])
@@ -305,9 +323,15 @@ int main(int argc, char* argv[])
 */
    yam::image_t img;
 
-   yam::load_to_buffer<yam::format::PNG>(img, "content/test_paletted.png");
+//   yam::load_to_buffer<yam::format::PNG>(img, "content/test_paletted.png");
+   yam::load_to_buffer<yam::format::PNG>(img, "template1.png");
+   yam::flip_vertical(img);
 
-   yam::load_to_texture<yam::format::PNG>("test texture", "content/test_diffuse.png");
+   fill_template(img);
+
+   yam::renderer.CreateTexture("test texture", img);
+
+//   yam::load_to_texture<yam::format::PNG>("test texture", "content/test_diffuse.png");
 //   yam::save_png("testout.png", img);
 
    game->Run();

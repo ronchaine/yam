@@ -409,6 +409,31 @@ namespace yam
       return WHEEL_OK;
    }
 
+   uint32_t Renderer::UploadTextureData(const wcl::string& name, image_t& image)
+   {
+      return UploadTextureData(name, 0, 0, image.width, image.height, (void*)(&image.image[0]));
+   }
+
+   uint32_t Renderer::UpdateTexture(const wcl::string& name, image_t& image)
+   {
+      if (!texture.count(name))
+      {
+         log(ERROR, "Can't update texture ", name, ", it doesn't exist.\n");
+         return WHEEL_RESOURCE_UNAVAILABLE;
+      }
+
+      if ((image.width != texture[name].w)
+      || (image.height != texture[name].h)
+      || (image.channels != texture[name].channels)
+      || (texture[name].format != WHEEL_UNSIGNED_BYTE))
+      {
+         log(ERROR, "Cannot update mismatching texture ", name, "\n");
+      }
+
+      UploadTextureData(name, image);
+      return WHEEL_OK;
+   }
+
    void Renderer::DeleteTexture(const wcl::string& name)
    {
       if (!texture.count(name))

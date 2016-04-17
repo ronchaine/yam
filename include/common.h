@@ -61,6 +61,18 @@ namespace yam
    typedef uint32_t img_format_t;
    typedef std::vector<uint32_t> palette_t;
 
+   struct point3d_t
+   {
+      size_t x, y, z;
+      point3d_t(size_t x, size_t y, size_t z) : x(x), y(y), z(z) {}
+   };
+
+   struct point2d_t
+   {
+      size_t x, y;
+      point2d_t(size_t x, size_t y) : x(x), y(y) {}
+   };
+
    struct texture_t
    {
       uint32_t    id;
@@ -71,12 +83,48 @@ namespace yam
 
    struct image_t
    {
-      uint32_t       width;
-      uint32_t       height;
-      uint32_t       channels;
+         struct pixel_access_t
+         {
+            private:
+               image_t& img;
+               size_t x, y;
 
-      wcl::buffer_t  image;
-      palette_t      palette;
+            public:
+               pixel_access_t(image_t& img, size_t x, size_t y) : img(img), x(x), y(y) {}
+
+               void operator=(uint32_t col)
+               {
+                  img.image[img.width * img.channels * y + img.channels * x + 0] = (col & (0xff000000)) >> 24;
+                  img.image[img.width * img.channels * y + img.channels * x + 1] = (col & (0xff0000)) >> 16;
+                  img.image[img.width * img.channels * y + img.channels * x + 2] = (col & (0xff00)) >> 8;
+                  img.image[img.width * img.channels * y + img.channels * x + 3] = (col & (0xff));
+               }
+
+               uint32_t value()
+               {
+                  return (img.image[img.width * img.channels * y + img.channels * x + 0] << 24)
+                       + (img.image[img.width * img.channels * y + img.channels * x + 1] << 16)
+                       + (img.image[img.width * img.channels * y + img.channels * x + 2] << 8)
+                       + (img.image[img.width * img.channels * y + img.channels * x + 3]);
+               }
+         };
+
+         uint32_t       width;
+         uint32_t       height;
+         uint32_t       channels;
+
+         wcl::buffer_t  image;
+         palette_t      palette;
+
+         uint8_t& operator[](point3d_t l)
+         {
+            return image[width * channels * l.y + channels * l.x + l.z];
+         }
+
+         pixel_access_t operator[](point2d_t l)
+         {
+            return pixel_access_t(*this, l.x, l.y);
+         }
    };
 }
 
