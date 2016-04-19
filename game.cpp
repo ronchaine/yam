@@ -220,7 +220,7 @@ void yam::Game::Render()
 {
    {
       yam::renderer.SetTarget("test_target");
-      renderer.Clear(0xff0000ff);
+      renderer.Clear(0x000000ff);
 
       renderer.SetShader("builtin_primitive");
 /*
@@ -268,7 +268,6 @@ void fill_template(yam::image_t& sprite_template)
    for (size_t i = 0; i < sprite_template.width; ++i)
    for (size_t j = 0; j < sprite_template.height; ++j)
    {
-      std::cout << std::hex << sprite_template[{i,j}].value() << "\n";
       if (sprite_template[{i,j}].value() == 0x799d3dff)
       {
          sprite_template[{i, j}] = 0x303030ff;
