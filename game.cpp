@@ -11,8 +11,8 @@ namespace yam
 {
    OutputTarget log;
 
-   Font* monospace;
-   Font* symbola;
+   TTFFont* monospace;
+   TTFFont* symbola;
 
    bool Game::ok()
    {
@@ -297,8 +297,8 @@ int main(int argc, char* argv[])
    yam::renderer.AddShader("testi", yam::Shader("shaders/test.vs", "shaders/test.fs"));
    yam::renderer.shader["testi"].AddBinding("test texture", "texture");
 
-   yam::symbola = new yam::Font("Symbola.ttf", 35, 1.1f);
-   yam::monospace = new yam::Font("Cousine-Regular.ttf", 11, 0.3f);
+   yam::symbola = new yam::TTFFont("Symbola.ttf", 35, 1.1f);
+   yam::monospace = new yam::TTFFont("Cousine-Regular.ttf", 11, 0.3f);
 
    yam::renderer.CreateTarget("test_target", 480, 270, 4);
 

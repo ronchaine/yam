@@ -122,7 +122,7 @@ namespace yam
       }
 
       void text(uint32_t layer,
-                const Font& font,
+                const TTFFont& font,
                 const wcl::string& text,
                 uint32_t colour)
       {
@@ -141,10 +141,9 @@ namespace yam
          float leftv, rightv, bottomv, topv;
 
          char32_t c;
+         vertex_t v0, v1, v2, v3;
 
          FT_Face& face = (FT_Face&)font.get_face();
-
-         vertex_t v0, v1, v2, v3;
 
          for (size_t i = 0; i < text.length(); ++i)
          {

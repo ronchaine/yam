@@ -2,16 +2,34 @@
 #include "include/debug.hpp"
 
 #include "include/renderer.h"
+#include "include/image/png.hpp"
 
 namespace yam
 {
-   FT_Library  Font::library  = nullptr;
-   uint32_t    Font::l_count  = 0;
-   uint32_t    Font::colour   = 0xffffffff;
+   FT_Library  TTFFont::library  = nullptr;
+   uint32_t    TTFFont::l_count  = 0;
+   uint32_t    TTFFont::colour   = 0xffffffff;
 
-   Font::Font(const wcl::string& file, uint32_t size, float ls)
-   : prefix(file + "/" + size + "/"), line_spacing(ls)
+   BitmapFont::BitmapFont(const wcl::string& file, uint32_t size) : Font(file + "/" + size + "/")
    {
+      type = YAM_FONT_BITMAP;
+
+/*
+      yam::image_t bmfont;
+      yam::load_to_buffer<yam::format::PNG>(bmfont, "bitmapfont.png");
+      yam::flip_vertical(bmfont);
+*/
+   }
+
+   BitmapFont::~BitmapFont()
+   {
+   }
+
+   TTFFont::TTFFont(const wcl::string& file, uint32_t size, float ls)
+   : Font(file + "/" + size + "/"), line_spacing(ls)
+   {
+      type = YAM_FONT_TRUETYPE;
+
       if (l_count == 0)
       {
          if (FT_Init_FreeType(&library))
@@ -64,7 +82,7 @@ namespace yam
       }
    }
 
-   Font::~Font()
+   TTFFont::~TTFFont()
    {
       FT_Done_Face(face);
 

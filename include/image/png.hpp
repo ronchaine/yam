@@ -5,6 +5,8 @@
 
 #include "../image.h"
 #include "../renderer.h"
+
+#define MINIZ_HEADER_FILE_ONLY
 #include "../../deps/miniz.c"
 
 #define ZLIB_CHUNK 262144
@@ -19,7 +21,7 @@ namespace yam
       uint32_t crc;
    };
 
-   size_t z_compress(const void* src, size_t len, wcl::buffer_t& destination)
+   inline size_t z_compress(const void* src, size_t len, wcl::buffer_t& destination)
    {
       z_stream stream;
 
@@ -79,7 +81,7 @@ namespace yam
       return destination.size();
    }
 
-   size_t z_uncompress(const void* src, size_t len, wcl::buffer_t& destination)
+   inline size_t z_uncompress(const void* src, size_t len, wcl::buffer_t& destination)
    {
       z_stream stream;
 
@@ -118,7 +120,7 @@ namespace yam
       return destination.size();
    }
 
-   size_t z_uncompress(const wcl::buffer_t& source, wcl::buffer_t& destination)
+   inline size_t z_uncompress(const wcl::buffer_t& source, wcl::buffer_t& destination)
    {
       if (source.size() == 0)
          return 0;
@@ -442,7 +444,7 @@ namespace yam
    }
 
    template<>
-   uint32_t load_to_buffer<format::PNG>(image_t& target, const wcl::string& file)
+   inline uint32_t load_to_buffer<format::PNG>(image_t& target, const wcl::string& file)
    {
       wcl::buffer_t* png = wcl::GetBuffer(file);
       read_png(*png, &target.width, &target.height, &target.channels, &target.image);
@@ -452,7 +454,7 @@ namespace yam
    }
 
    template<>
-   uint32_t load_to_texture<format::PNG>(const wcl::string& texture, const wcl::string& file)
+   inline uint32_t load_to_texture<format::PNG>(const wcl::string& texture, const wcl::string& file)
    {
       image_t image;
       load_to_buffer<format::PNG>(image, file);
