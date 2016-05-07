@@ -13,6 +13,7 @@ namespace yam
 
    TTFFont* monospace;
    TTFFont* symbola;
+   BitmapFont* fnt1;
 
    bool Game::ok()
    {
@@ -74,6 +75,8 @@ namespace yam
 
    inline uint32_t Game::GetEvents(wheel::EventList* events)
    {
+      events->clear();
+
       SDL_Event sdlevent;
       while(SDL_PollEvent(&sdlevent))
       {
@@ -158,10 +161,13 @@ namespace yam
             newevent.data.push_back(WHEEL_EVENT_CONTROLLER);
             SDL_ControllerAxisEvent what = sdlevent.caxis;
             newevent.data.push_back((uint8_t)what.which);
-            newevent.data.push_back(WHEEL_RELEASE);
+            newevent.data.push_back(WHEEL_AXIS_POSITION);
             newevent.data.push_back((uint8_t)what.axis);
             newevent.data.write<uint16_t>(what.value);
          }
+
+         if (events != nullptr)
+            events->push_back(newevent);
       }
 
       return WHEEL_OK;
@@ -175,6 +181,15 @@ namespace yam
          t_previous = std::chrono::steady_clock::now();
 
          t_delay = 0;
+
+         /*
+         Debug stuff
+         */
+         state.eventmap.map_event(wheel::describe_event(WHEEL_EVENT_CONTROLLER), "ctrl",
+         [&](wheel::Event& e)
+            {
+            }
+         );
       }
 
       while(WindowIsOpen())
@@ -202,18 +217,9 @@ namespace yam
    }
 }
 
-const wcl::string tiles()
+void yam::Game::Update()
 {
-   wcl::string rval;
-
-   for (int i = 0; i < 0x2b; ++i)
-   {
-      rval += char32_t(0x1f000 + i);
-      if ((i % 8) == 0)
-         rval += char32_t('\n');
-   }
-
-   return rval;
+   state.eventmap.process(events);
 }
 
 void yam::Game::Render()
@@ -223,9 +229,10 @@ void yam::Game::Render()
       renderer.Clear(0x000000ff);
 
       renderer.SetShader("builtin_primitive");
-/*
+
       draw::rectangle(4, 20, 20, 40, 40, 0xff0f30ef);
       draw::rectangle(3, 40, 40, 40, 40, 0xff0f30ef);
+      /*
 
       draw::triangle(2, 100, 20, 120, 20, 60, 50, 0xff00ffff);
 
@@ -237,29 +244,24 @@ void yam::Game::Render()
       renderer.SetShader("testi");
       draw::rectangle(3, 40, 40, 20, 30, 0xffffffff);
 
+      draw::set_cursor(10, 100);
+      draw::text(0, *monospace, "This is text\n om nom nom", 0xffffffff);
+
+      draw::set_cursor(10, 10);
+      draw::text(0, *fnt1, "bitmap text works as well\nright?", 0xffffffff);
+
       yam::renderer.Flush();
       renderer.Swap();
 
       yam::renderer.SetTarget(0);
       renderer.Clear(0.0, 0.0, 0.0);
       yam::renderer.SetShader("final");
-
       draw::rectangle(0, 0, 0, renderer.scrw, renderer.scrh, 0xffffffff);
-/*
-      draw::set_cursor(10, 100);
-      draw::text(0, *monospace, "This is text\n om nom nom", 0xffffffff);
 
-      draw::set_cursor(10, 500);
-      draw::text(0, *symbola, tiles() + "And newline\n testing.", 0xffffffff);
-*/
       yam::renderer.Flush();
       renderer.Swap();
 
    }
-}
-
-void yam::Game::Update()
-{
 }
 
 void fill_template(yam::image_t& sprite_template)
@@ -300,6 +302,9 @@ int main(int argc, char* argv[])
    yam::symbola = new yam::TTFFont("Symbola.ttf", 35, 1.1f);
    yam::monospace = new yam::TTFFont("Cousine-Regular.ttf", 11, 0.3f);
 
+   yam::fnt1 = new yam::BitmapFont("bitmapfont.png", "abcdefghijklmnopqrstuvwxyzäöŋɲ", 8);
+//   BitmapFont::BitmapFont(const wcl::string& file, const wcl::string& glyphs, uint32_t size)
+
    yam::renderer.CreateTarget("test_target", 480, 270, 4);
 
    yam::renderer.AddShader("final", yam::Shader("shaders/test.vs", "shaders/post.fs"));
@@ -317,8 +322,8 @@ int main(int argc, char* argv[])
 
    yam::log.set_frameptr(game->get_frameptr());
 /*
-    wcl::buffer_t* png = wcl::GetBuffer("content/test_paletted.png");
-    yam::read_png(*png);
+   wcl::buffer_t* fnt1 = wcl::GetBuffer("bitmapfont.png");
+   yam::read_png(*fnt1);
 */
    yam::image_t img;
 
@@ -335,6 +340,7 @@ int main(int argc, char* argv[])
 
    game->Run();
 
+   delete yam::fnt1;
    delete yam::symbola;
    delete yam::monospace;
 

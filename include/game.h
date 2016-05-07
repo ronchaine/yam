@@ -7,6 +7,11 @@
 
 namespace yam
 {
+   struct gamestate_t
+   {
+      wheel::EventMapping  eventmap;
+   };
+
    class Game
    {
       private:
@@ -28,7 +33,9 @@ namespace yam
          bool   t_active;
 
       protected:
-         // Event list
+         gamestate_t state;
+
+         // Event stuff
          wheel::EventList events;
 
          // Controller list

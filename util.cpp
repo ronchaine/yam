@@ -122,7 +122,7 @@ namespace yam
       }
 
       void text(uint32_t layer,
-                const TTFFont& font,
+                Font& font,
                 const wcl::string& text,
                 uint32_t colour)
       {
@@ -143,13 +143,11 @@ namespace yam
          char32_t c;
          vertex_t v0, v1, v2, v3;
 
-         FT_Face& face = (FT_Face&)font.get_face();
-
          for (size_t i = 0; i < text.length(); ++i)
          {
             c = *(text.getptr() + i);
 
-            if (FT_Load_Char(face, c, FT_LOAD_RENDER | FT_LOAD_FORCE_AUTOHINT | FT_LOAD_TARGET_LIGHT))
+            if (!font.prepare_glyph(c))
                continue;
 
             if (c == '\n')
@@ -161,23 +159,14 @@ namespace yam
 
             if (c == ' ')
             {
-               cursor_pos += (face->glyph->advance.x >> 6);
-               cursor_row += (face->glyph->advance.y >> 6);
+               cursor_pos += font.get_advance(c);
+               cursor_row += font.get_advance_vertical(c);
                continue;
             }
 
-            // If character is not in atlas, put it there.
             if (renderer.GetAtlasPos(YAM_FONTBUFFER_NAME, font.prefix + c, &r) != WHEEL_OK)
             {
-               uint32_t ft_w = face->glyph->bitmap.width;
-               uint32_t ft_h = face->glyph->bitmap.rows;
-
-               uint8_t remap[ft_h][ft_w];
-
-               for (int i = 0; i < ft_w; ++i) for (int j = 0; j < ft_h; ++j)
-                  remap[ft_h - j - 1][i] = *(face->glyph->bitmap.buffer + j * ft_w + i);
-
-               if (renderer.AtlasBuffer(YAM_FONTBUFFER_NAME, font.prefix + c, ft_w, ft_h, remap) != WHEEL_OK)
+               if (!font.atlas_glyph(c))
                   continue;
             }
 
@@ -186,12 +175,10 @@ namespace yam
             bottom   = ((float)(r.y / (float)YAM_FONTBUFFER_SIZE)) * 0xffff;
             top      = ((float)((r.y + r.h) / (float)YAM_FONTBUFFER_SIZE)) * 0xffff;
 
-            int ymod = -face->glyph->bitmap.rows + face->glyph->bitmap_top;
-
-            leftv    = -1.0f + x_unit * (cursor_pos + face->glyph->bitmap_left);
-            rightv   = -1.0f + x_unit * (cursor_pos + face->glyph->bitmap_left + face->glyph->bitmap.width);
-            bottomv  = -1.0f + y_unit * (cursor_row + ymod);
-            topv     = -1.0f + y_unit * (cursor_row + ymod + face->glyph->bitmap.rows);
+            leftv    = -1.0f + x_unit * (cursor_pos + font.glyph_left(c));
+            rightv   = -1.0f + x_unit * (cursor_pos + font.glyph_left(c) + font.glyph_width(c));
+            bottomv  = -1.0f + y_unit * (cursor_row);
+            topv     = -1.0f + y_unit * (cursor_row + font.glyph_height(c));
 
             v0.r = (colour & 0xff000000) >> 24;
             v0.g = (colour & 0xff0000) >> 16;
@@ -225,8 +212,8 @@ namespace yam
 
             renderer.AddVertices(layer, v0, v1, v3, v1, v2, v3);
 
-            cursor_pos += (face->glyph->advance.x >> 6);
-            cursor_row += (face->glyph->advance.y >> 6);
+            cursor_pos += font.get_advance(c);
+            cursor_row += font.get_advance_vertical(c);
          }
 
          if (old_shader != renderer.GetShader())

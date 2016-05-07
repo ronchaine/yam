@@ -94,6 +94,7 @@ namespace yam
 
                void operator=(uint32_t col)
                {
+                  assert((img.channels == 4) && "operator= only implemented for 4-channel images");
                   img.image[img.width * img.channels * y + img.channels * x + 0] = (col & (0xff000000)) >> 24;
                   img.image[img.width * img.channels * y + img.channels * x + 1] = (col & (0xff0000)) >> 16;
                   img.image[img.width * img.channels * y + img.channels * x + 2] = (col & (0xff00)) >> 8;
@@ -102,6 +103,7 @@ namespace yam
 
                uint32_t value()
                {
+                  assert((img.channels == 4) && "value() only implemented for 4-channel images");
                   return (img.image[img.width * img.channels * y + img.channels * x + 0] << 24)
                        + (img.image[img.width * img.channels * y + img.channels * x + 1] << 16)
                        + (img.image[img.width * img.channels * y + img.channels * x + 2] << 8)

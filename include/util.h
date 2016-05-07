@@ -32,9 +32,10 @@ namespace yam
       std::tuple<double, double> get_cursor();
 
       void text(uint32_t layer,
-                const TTFFont& font,
+                Font& font,
                 const wcl::string& text,
                 uint32_t colour = 0xffffffff);
+
    }
 }
 
